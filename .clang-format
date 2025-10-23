@@ -1,0 +1,11 @@
+Language: Cpp
+BasedOnStyle: Chromium
+UseTab: Never
+IndentWidth: 2
+TabWidth: 2
+AllowShortIfStatementsOnASingleLine: Never
+IndentCaseLabels: true
+AccessModifierOffset: -2
+SortIncludes: Never
+BreakBeforeBraces: Stroustrup
+ColumnLimit: 120 
