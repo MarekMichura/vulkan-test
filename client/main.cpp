@@ -2,14 +2,10 @@
 #include <exception>
 #include <iostream>
 #include "app.hpp"
-#include "glfw.hpp"
-#include "vulkan.hpp"
 
 int main()
 {
   try {
-    vul::GLFW glfw;
-    vul::Vulkan vulkan;
     vul::App app;
 
     app.run();

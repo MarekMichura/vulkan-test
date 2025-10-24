@@ -1,6 +1,8 @@
 #pragma once
-#include "window.hpp"
 #include <string>
+#include "vulkanInit.hpp"
+#include "glfwInit.hpp"
+#include "window.hpp"
 
 namespace vul {
 class App {
@@ -12,6 +14,8 @@ public:
   void run();
 
 private:
-  vul::Window _window{width, height, title};
+  vul::GlfwInit _glfw;
+  vul::VulkanInit _vulkan{{}};
+  vul::Window _window{{}};
 };
 }  // namespace vul

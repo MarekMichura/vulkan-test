@@ -8,6 +8,7 @@ file(GLOB_RECURSE CLIENT_SOURCES CONFIGURE_DEPENDS
 target_sources(${PROJECT_NAME}-Client PRIVATE ${CLIENT_SOURCES})
 target_compile_features(${PROJECT_NAME}-Client PRIVATE cxx_std_23)
 target_compile_options(${PROJECT_NAME}-Client PRIVATE ${FLAGS})
+target_compile_definitions(${PROJECT_NAME}-Client PRIVATE $<$<CONFIG:Debug>:DEBUG>)
 target_link_libraries(${PROJECT_NAME}-Client PRIVATE Vulkan::Vulkan volk glfw)
 
 target_include_directories(${PROJECT_NAME}-Client
@@ -20,6 +21,7 @@ foreach(header ${CLIENT_SOURCES})
   get_filename_component(dir ${header} DIRECTORY)
   list(APPEND CLIENT_INCLUDE_DIRS ${dir})
 endforeach()
+
 list(REMOVE_DUPLICATES CLIENT_INCLUDE_DIRS)
 target_include_directories(${PROJECT_NAME}-Client PRIVATE ${CLIENT_INCLUDE_DIRS})
 
@@ -55,7 +57,7 @@ foreach(SHADER ${SHADERS})
     OUTPUT ${SPIRV}
     COMMAND ${GLSLANG_VALIDATOR} -V -S ${STAGE} ${SHADER} -o ${SPIRV}
     DEPENDS ${SHADER}
-    COMMENT "Kompilowanie shaderów: ${FILENAME}"
+    COMMENT "copping shader: ${FILENAME}"
     VERBATIM
   )
 

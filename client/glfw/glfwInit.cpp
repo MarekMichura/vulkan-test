@@ -1,16 +1,16 @@
-#include "glfw/glfw.hpp"
 #include <stdexcept>
 #include "GLFW/glfw3.h"
+#include "glfwInit.hpp"
 
 namespace vul {
-GLFW::GLFW()
+GlfwInit::GlfwInit()
 {
   if (glfwInit() == 0) {
     throw std::runtime_error("Failed to initialize GLFW");
   }
 }
 
-GLFW::~GLFW()
+GlfwInit::~GlfwInit()
 {
   glfwTerminate();
 }

@@ -56,6 +56,7 @@ else()
   )
 endif()
 
+include(CPack)
 include(FetchContent)
 set(FETCHCONTENT_UPDATES_DISCONNECTED TRUE)
 
