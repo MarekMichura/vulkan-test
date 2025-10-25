@@ -6,6 +6,7 @@
 #include <stdexcept>
 #include <vector>
 #include "GLFW/glfw3.h"
+#include "types.h"
 #include "vulkanInit.hpp"
 
 namespace vul {
@@ -46,9 +47,9 @@ VkInstance VulkanInit::createInstance(const VulkanDef& def)
       .pNext = nullptr,
       .flags = 0,
       .pApplicationInfo = &appInfo,
-      .enabledLayerCount = static_cast<unsigned int>(def.layers.size()),
+      .enabledLayerCount = static_cast<uint32>(def.layers.size()),
       .ppEnabledLayerNames = def.layers.data(),
-      .enabledExtensionCount = static_cast<unsigned int>(extensions.size()),
+      .enabledExtensionCount = static_cast<uint32>(extensions.size()),
       .ppEnabledExtensionNames = extensions.data(),
   };
 
@@ -62,7 +63,7 @@ VkInstance VulkanInit::createInstance(const VulkanDef& def)
 
 std::vector<const char*> VulkanInit::combineExtensionsWithGlfwExtensions(const std::vector<const char*>& def)
 {
-  unsigned int glfwCountInstanceExtensions = 0;
+  uint32 glfwCountInstanceExtensions = 0;
   const char** glfwInstanceExtensions = glfwGetRequiredInstanceExtensions(&glfwCountInstanceExtensions);
   if (glfwInstanceExtensions == nullptr) {
     throw std::runtime_error("GLFW: Failed to get extensions");
@@ -79,7 +80,7 @@ std::vector<const char*> VulkanInit::combineExtensionsWithGlfwExtensions(const s
 
 std::vector<VkExtensionProperties> VulkanInit::getAllAvailableExtensions()
 {
-  unsigned int count = 0;
+  uint32 count = 0;
   VkResult result = vkEnumerateInstanceExtensionProperties(nullptr, &count, nullptr);
   if (result != VK_SUCCESS) {
     throw std::runtime_error(std::format("Failed to get vulkan available extensions: {}", std::to_string(result)));
@@ -110,7 +111,7 @@ std::vector<VkExtensionProperties> VulkanInit::getAllAvailableExtensions()
 
 std::vector<VkLayerProperties> VulkanInit::getAllAvailableLayers()
 {
-  unsigned int count = 0;
+  uint32 count = 0;
   VkResult result = vkEnumerateInstanceLayerProperties(&count, nullptr);
   if (result != VK_SUCCESS) {
     throw std::runtime_error(std::format("Failed to get vulkan available layers: {}", std::to_string(result)));

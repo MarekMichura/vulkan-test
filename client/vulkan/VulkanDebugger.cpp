@@ -3,6 +3,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <vector>
+#include "types.h"
 #include <vulkan/vulkan_core.h>
 #include "VulkanDebugger.hpp"
 
@@ -70,7 +71,7 @@ VkDebugUtilsMessengerEXT VulkanDebugger::createDebugMessenger(const std::vector<
   return debugMessenger;
 }
 
-VKAPI_ATTR unsigned int VKAPI_CALL VulkanDebugger::debugCallback(  //
+VKAPI_ATTR uint32 VKAPI_CALL VulkanDebugger::debugCallback(  //
     VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
     VkDebugUtilsMessageTypeFlagsEXT messageType,
     const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,

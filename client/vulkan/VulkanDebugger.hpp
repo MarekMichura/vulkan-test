@@ -1,6 +1,7 @@
 #include <vulkan/vk_platform.h>
 #include <vulkan/vulkan_core.h>
 #include <vector>
+#include "types.h"
 
 namespace vul {
 class VulkanDebugger {
@@ -23,7 +24,7 @@ private:
                                           const std::vector<const char*>& layers);
   VkDebugUtilsMessengerEXT createDebugMessenger(const std::vector<const char*>& extensions,
                                                 const std::vector<const char*>& layers);
-  static VKAPI_ATTR unsigned int VKAPI_CALL debugCallback(  //
+  static VKAPI_ATTR uint32 VKAPI_CALL debugCallback(  //
       VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
       VkDebugUtilsMessageTypeFlagsEXT messageType,
       const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,

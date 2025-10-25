@@ -65,3 +65,14 @@ foreach(SHADER ${SHADERS})
 endforeach()
 
 add_custom_target(shaders ALL DEPENDS ${SPIRV_SHADERS})
+
+# ===========================================================================================================
+
+if(CMAKE_BUILD_TYPE STREQUAL "Debug" AND ASSAN)
+  message(STATUS "Enabling AddressSanitizer")
+  if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
+    target_compile_options(${PROJECT_NAME}-Client PRIVATE -fsanitize=address)
+    target_link_options(${PROJECT_NAME}-Client PRIVATE -fsanitize=address)
+  endif()
+endif()
+

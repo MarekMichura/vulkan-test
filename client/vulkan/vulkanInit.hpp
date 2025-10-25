@@ -4,6 +4,7 @@
 #include <memory>
 #include <vector>
 #include "VulkanDebugger.hpp"
+#include "types.h"
 
 namespace vul {
 class VulkanInit {
@@ -12,8 +13,8 @@ private:
     const char* appName = "appName";
     const char* engineName = "engineName";
 
-    unsigned int appVersion = VK_MAKE_VERSION(1, 0, 0);
-    unsigned int engineVersion = VK_MAKE_VERSION(1, 0, 0);
+    uint32 appVersion = VK_MAKE_VERSION(1, 0, 0);
+    uint32 engineVersion = VK_MAKE_VERSION(1, 0, 0);
 
 #ifdef DEBUG
     bool enableDebugger = true;
@@ -21,8 +22,8 @@ private:
     std::vector<const char*> extensions = {VK_EXT_DEBUG_UTILS_EXTENSION_NAME};
 #else
     bool enableDebugger = false;
-    std::vector<const char*> layers;
-    std::vector<const char*> extensions;
+    std::vector<const char*> layers{};
+    std::vector<const char*> extensions{};
 #endif
   };
 
