@@ -1,7 +1,9 @@
 #pragma once
 
 #include <vulkan/vulkan_core.h>
+#include <memory>
 #include <vector>
+#include "VulkanDebugger.hpp"
 
 namespace vul {
 class VulkanInit {
@@ -13,7 +15,15 @@ private:
     unsigned int appVersion = VK_MAKE_VERSION(1, 0, 0);
     unsigned int engineVersion = VK_MAKE_VERSION(1, 0, 0);
 
+#ifdef DEBUG
+    bool enableDebugger = true;
     std::vector<const char*> layers = {"VK_LAYER_KHRONOS_validation"};
+    std::vector<const char*> extensions = {VK_EXT_DEBUG_UTILS_EXTENSION_NAME};
+#else
+    bool enableDebugger = false;
+    std::vector<const char*> layers;
+    std::vector<const char*> extensions;
+#endif
   };
 
 public:
@@ -27,13 +37,19 @@ public:
 
 private:
   const VkInstance _instance;
+  std::unique_ptr<VulkanDebugger> _vulkanDebugger = nullptr;
 
   static VkInstance createInstance(const VulkanDef& def);
-  static VkInstance checkExtensions();
 
-#ifdef DEBUG
-  static void vulcanExtensionInfo(const std::vector<VkExtensionProperties>& extensions);
-#endif
+  static std::vector<const char*> combineExtensionsWithGlfwExtensions(const std::vector<const char*>& def);
+  static std::vector<VkExtensionProperties> getAllAvailableExtensions();
+  static std::vector<VkLayerProperties> getAllAvailableLayers();
+
+  static void createDebugValidation();
+  static void checkExtensions(const std::vector<const char*>& extensions,
+                              const std::vector<VkExtensionProperties>& availableExtensions);
+  static void checkLayers(const std::vector<const char*>& layers,
+                          const std::vector<VkLayerProperties>& availableLayers);
 };
 
 }  // namespace vul

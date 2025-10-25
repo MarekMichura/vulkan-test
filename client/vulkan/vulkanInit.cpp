@@ -1,22 +1,35 @@
 #include <vulkan/vulkan_core.h>
+#include <algorithm>
+#include <cstring>
 #include <format>
 #include <print>
 #include <stdexcept>
+#include <vector>
 #include "GLFW/glfw3.h"
 #include "vulkanInit.hpp"
 
 namespace vul {
-VulkanInit::VulkanInit(const VulkanDef& def) : _instance(createInstance(def)) {}
+VulkanInit::VulkanInit(const VulkanDef& def) : _instance(createInstance(def))
+{
+  if (def.enableDebugger) {
+    _vulkanDebugger = std::make_unique<VulkanDebugger>(_instance, def.extensions, def.layers);
+  }
+}
 
 VulkanInit::~VulkanInit()
 {
+  _vulkanDebugger.reset();
   vkDestroyInstance(_instance, nullptr);
 }
 
 VkInstance VulkanInit::createInstance(const VulkanDef& def)
 {
-  unsigned int glfwCountInstanceExtensions = 0;
-  const char** glfwInstanceExtensions = glfwGetRequiredInstanceExtensions(&glfwCountInstanceExtensions);
+  auto availableExtensions = getAllAvailableExtensions();
+  auto extensions = combineExtensionsWithGlfwExtensions(def.extensions);
+  auto availableLayers = getAllAvailableLayers();
+
+  checkExtensions(extensions, availableExtensions);
+  checkLayers(def.layers, availableLayers);
 
   VkApplicationInfo appInfo{
       .sType = VK_STRUCTURE_TYPE_APPLICATION_INFO,
@@ -35,40 +48,124 @@ VkInstance VulkanInit::createInstance(const VulkanDef& def)
       .pApplicationInfo = &appInfo,
       .enabledLayerCount = static_cast<unsigned int>(def.layers.size()),
       .ppEnabledLayerNames = def.layers.data(),
-      .enabledExtensionCount = glfwCountInstanceExtensions,
-      .ppEnabledExtensionNames = glfwInstanceExtensions,
+      .enabledExtensionCount = static_cast<unsigned int>(extensions.size()),
+      .ppEnabledExtensionNames = extensions.data(),
   };
 
   VkInstance instance{};
   if (vkCreateInstance(&instanceInfo, nullptr, &instance) != VK_SUCCESS) {
     throw std::runtime_error("can not create vulkan instance");
   }
-  unsigned int extensionCount = 0;
-  vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
-  std::vector<VkExtensionProperties> extensions(extensionCount);
-  vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, extensions.data());
 
-#ifdef DEBUG
-  vulcanExtensionInfo(extensions);
-#endif
   return instance;
 }
 
-#ifdef DEBUG
-void VulkanInit::vulcanExtensionInfo(const std::vector<VkExtensionProperties>& extensions)
+std::vector<const char*> VulkanInit::combineExtensionsWithGlfwExtensions(const std::vector<const char*>& def)
 {
-  constexpr int extensionWidth = 40;
-  constexpr int versionWidth = 7;
-  constexpr int marginWidth = extensionWidth + versionWidth + 7;
+  unsigned int glfwCountInstanceExtensions = 0;
+  const char** glfwInstanceExtensions = glfwGetRequiredInstanceExtensions(&glfwCountInstanceExtensions);
+  if (glfwInstanceExtensions == nullptr) {
+    throw std::runtime_error("GLFW: Failed to get extensions");
+  }
+
+  std::vector<const char*> extensions;
+  extensions.reserve(glfwCountInstanceExtensions + def.size());
+
+  extensions.insert(extensions.end(), glfwInstanceExtensions, glfwInstanceExtensions + glfwCountInstanceExtensions);
+  extensions.insert(extensions.begin(), def.begin(), def.end());
+
+  return extensions;
+}
+
+std::vector<VkExtensionProperties> VulkanInit::getAllAvailableExtensions()
+{
+  unsigned int count = 0;
+  VkResult result = vkEnumerateInstanceExtensionProperties(nullptr, &count, nullptr);
+  if (result != VK_SUCCESS) {
+    throw std::runtime_error(std::format("Failed to get vulkan available extensions: {}", std::to_string(result)));
+  }
+
+  std::vector<VkExtensionProperties> extensions(count);
+  result = vkEnumerateInstanceExtensionProperties(nullptr, &count, extensions.data());
+  if (result != VK_SUCCESS) {
+    throw std::runtime_error(std::format("Failed to get vulkan available extensions: {}", std::to_string(result)));
+  }
+
+#ifdef DEBUG
+  constexpr int nameWidth = 40;
+  constexpr int verWidth = 7;
+  constexpr int marginWidth = nameWidth + verWidth + 7;
 
   std::println("{:=^{}s}", " Vulkan Extensions ", marginWidth);
-  std::println("| {:^{}} | {:^{}} |", "Name", extensionWidth, "Version", versionWidth);
+  std::println("| {:^{}} | {:^{}} |", "Name", nameWidth, "Version", verWidth);
   std::println("{:=^{}s}", "", marginWidth);
   for (const auto& ele : extensions) {
-    std::println("|-{:->{}}-|-{:-^{}}-|", ele.extensionName, extensionWidth, ele.specVersion, versionWidth);
+    std::println("|-{:-^{}}-|-{:-^{}}-|", ele.extensionName, nameWidth, ele.specVersion, verWidth);
   }
-  std::println("{:=^{}s}", "", marginWidth);
-}
+  std::println("{:=^{}s}\n", "", marginWidth);
 #endif
+
+  return extensions;
+}
+
+std::vector<VkLayerProperties> VulkanInit::getAllAvailableLayers()
+{
+  unsigned int count = 0;
+  VkResult result = vkEnumerateInstanceLayerProperties(&count, nullptr);
+  if (result != VK_SUCCESS) {
+    throw std::runtime_error(std::format("Failed to get vulkan available layers: {}", std::to_string(result)));
+  }
+
+  std::vector<VkLayerProperties> layers(count);
+  result = vkEnumerateInstanceLayerProperties(&count, layers.data());
+  if (result != VK_SUCCESS) {
+    throw std::runtime_error(std::format("Failed to get vulkan available layers: {}", std::to_string(result)));
+  }
+
+#ifdef DEBUG
+  constexpr int nameWidth = 40;
+  constexpr int verWidth = 7;
+  constexpr int impWidth = 14;
+  constexpr int marginWidth = nameWidth + verWidth + impWidth + 9;
+
+  std::println("{:=^{}s}", " Vulkan Layers ", marginWidth);
+  std::println("| {:^{}} | {:^{}} | {:^{}} |", "Name", nameWidth, "Version", verWidth, "Implementation", impWidth);
+  std::println("{:=^{}s}", "", marginWidth);
+  for (const auto& ele : layers) {
+    std::println("|-{:-^{}}-|-{:-^{}}-|-{:-^{}}-|",  //
+                 ele.layerName, nameWidth, ele.specVersion, verWidth, ele.implementationVersion, impWidth);
+  }
+  std::println("{:=^{}s}\n", "", marginWidth);
+#endif
+
+  return layers;
+}
+
+void VulkanInit::checkExtensions(const std::vector<const char*>& extensions,
+                                 const std::vector<VkExtensionProperties>& availableExtensions)
+{
+  for (const auto* const extension : extensions) {
+    auto it = std::find_if(
+        availableExtensions.begin(), availableExtensions.end(),
+        [&extension](const VkExtensionProperties& ext) { return std::strcmp(extension, ext.extensionName) == 0; });
+
+    if (it == availableExtensions.end()) {
+      throw std::runtime_error(std::format("Extension: {} is not available", extension));
+    }
+  }
+}
+
+void VulkanInit::checkLayers(const std::vector<const char*>& layers,
+                             const std::vector<VkLayerProperties>& availableLayers)
+{
+  for (const auto* const layer : layers) {
+    auto it = std::find_if(availableLayers.begin(), availableLayers.end(),
+                           [&layer](const VkLayerProperties& ext) { return std::strcmp(layer, ext.layerName) == 0; });
+
+    if (it == availableLayers.end()) {
+      throw std::runtime_error(std::format("Layer: {} is not available", layer));
+    }
+  }
+}
 
 }  // namespace vul
