@@ -34,11 +34,11 @@ public:
   VulkanInit& operator=(VulkanInit&&) = delete;
 
   VulkanInit(const VulkanDef& def);
-  ~VulkanInit();
+  ~VulkanInit() = default;
 
 private:
-  const VkInstance _instance;
-  std::unique_ptr<VulkanDebugger> _vulkanDebugger = nullptr;
+  const std::unique_ptr<VkInstance_T, void (*)(VkInstance)> _instance;
+  const std::unique_ptr<VulkanDebugger> _vulkanDebugger;
 
   static VkInstance createInstance(const VulkanDef& def);
 

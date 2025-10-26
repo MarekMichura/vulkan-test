@@ -10,17 +10,10 @@
 #include "vulkanInit.hpp"
 
 namespace vul {
-VulkanInit::VulkanInit(const VulkanDef& def) : _instance(createInstance(def))
+VulkanInit::VulkanInit(const VulkanDef& def)
+    : _instance(createInstance(def), [](VkInstance inst) { vkDestroyInstance(inst, nullptr); }),
+      _vulkanDebugger(def.enableDebugger ? new VulkanDebugger(_instance.get(), def.extensions, def.layers) : nullptr)
 {
-  if (def.enableDebugger) {
-    _vulkanDebugger = std::make_unique<VulkanDebugger>(_instance, def.extensions, def.layers);
-  }
-}
-
-VulkanInit::~VulkanInit()
-{
-  _vulkanDebugger.reset();
-  vkDestroyInstance(_instance, nullptr);
 }
 
 VkInstance VulkanInit::createInstance(const VulkanDef& def)
@@ -53,7 +46,7 @@ VkInstance VulkanInit::createInstance(const VulkanDef& def)
       .ppEnabledExtensionNames = extensions.data(),
   };
 
-  VkInstance instance{};
+  VkInstance instance = nullptr;
   if (vkCreateInstance(&instanceInfo, nullptr, &instance) != VK_SUCCESS) {
     throw std::runtime_error("can not create vulkan instance");
   }
