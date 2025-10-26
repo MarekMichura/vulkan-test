@@ -59,7 +59,7 @@ endif()
 include(CPack)
 include(FetchContent)
 set(FETCHCONTENT_UPDATES_DISCONNECTED TRUE)
-set(ASSAN FALSE)
+set(ASSAN TRUE)
 
 FetchContent_Declare(
   glfw

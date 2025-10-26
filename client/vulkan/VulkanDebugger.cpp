@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <chrono>
 #include <cstring>
 #include <iostream>
 #include <stdexcept>
@@ -78,20 +79,9 @@ VKAPI_ATTR uint32 VKAPI_CALL VulkanDebugger::debugCallback(  //
     [[maybe_unused]] void* pUserData)
 {
   std::ostream& out = ((messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT) != 0) ? std::cerr : std::cout;
-  switch (messageSeverity) {  // color select
-    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
-      out << "\033[31m";
-      break;
-    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
-      out << "\033[33m";
-      break;
-    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
-      out << "\033[34m";
-      break;
-    default:
-      out << "\033[37m";
-      break;
-  }
+
+  auto now = std::chrono::system_clock::now();
+  out << "\t" << std::format("[{0:%H:%M:%S}] ", time_point_cast<std::chrono::seconds>(now));
 
   switch (messageType) {
     case VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT:
@@ -104,6 +94,21 @@ VKAPI_ATTR uint32 VKAPI_CALL VulkanDebugger::debugCallback(  //
       out << "[General] ";
       break;
     default:
+      break;
+  }
+
+  switch (messageSeverity) {  // color select
+    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
+      out << "\033[31m";
+      break;
+    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
+      out << "\033[33m";
+      break;
+    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
+      out << "\033[34m";
+      break;
+    default:
+      out << "\033[37m";
       break;
   }
 
