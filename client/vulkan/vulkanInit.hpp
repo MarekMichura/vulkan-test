@@ -2,8 +2,10 @@
 
 #include <vulkan/vulkan_core.h>
 #include <memory>
+#include <optional>
 #include <vector>
-#include "VulkanDebugger.hpp"
+#include "vulkanDebugger.hpp"
+#include "vulkanDevice.hpp"
 #include "types.h"
 
 namespace vul {
@@ -38,7 +40,8 @@ public:
 
 private:
   const std::unique_ptr<VkInstance_T, void (*)(VkInstance)> _instance;
-  const std::unique_ptr<VulkanDebugger> _vulkanDebugger;
+  const std::optional<VulkanDebugger> _vulkanDebugger;
+  const std::unique_ptr<VulkanDevice> _vulkanDevice;
 
   static VkInstance createInstance(const VulkanDef& def);
 

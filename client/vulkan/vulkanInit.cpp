@@ -12,7 +12,10 @@
 namespace vul {
 VulkanInit::VulkanInit(const VulkanDef& def)
     : _instance(createInstance(def), [](VkInstance inst) { vkDestroyInstance(inst, nullptr); }),
-      _vulkanDebugger(def.enableDebugger ? new VulkanDebugger(_instance.get(), def.extensions, def.layers) : nullptr)
+      _vulkanDebugger(def.enableDebugger
+                          ? std::make_optional<VulkanDebugger>(_instance.get(), def.extensions, def.layers)
+                          : std::nullopt),
+      _vulkanDevice(std::make_unique<VulkanDevice>(_instance.get()))
 {
 }
 

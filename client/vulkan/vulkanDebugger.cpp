@@ -6,7 +6,7 @@
 #include <vector>
 #include "types.h"
 #include <vulkan/vulkan_core.h>
-#include "VulkanDebugger.hpp"
+#include "vulkanDebugger.hpp"
 
 namespace vul {
 VulkanDebugger::VulkanDebugger(const VkInstance instance,
