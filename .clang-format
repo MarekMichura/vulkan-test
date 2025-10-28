@@ -4,8 +4,19 @@ UseTab: Never
 IndentWidth: 2
 TabWidth: 2
 AllowShortIfStatementsOnASingleLine: Never
-IndentCaseLabels: true
+IndentCaseLabels: false
 AccessModifierOffset: -2
-SortIncludes: Never
 BreakBeforeBraces: Stroustrup
 ColumnLimit: 120 
+
+IncludeBlocks: Regroup
+SortIncludes: true
+IncludeCategories:
+  - Regex: '^<[^/]*>$'
+    Priority: 1
+    
+  - Regex: '(^"GLFW/.*"$|^<vulkan/.*>$)'
+    Priority: 2
+    
+  - Regex: '^".*"'
+    Priority: 3

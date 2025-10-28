@@ -1,9 +1,10 @@
 #pragma once
 #define GLFW_INCLUDE_VULKAN
 
-#include <string>
 #include <memory>
+#include <string>
 #include <string_view>
+
 #include <GLFW/glfw3.h>
 
 namespace vul {

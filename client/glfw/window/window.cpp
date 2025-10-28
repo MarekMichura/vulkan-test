@@ -1,5 +1,6 @@
-#include "GLFW/glfw3.h"
 #include "window.hpp"
+
+#include "GLFW/glfw3.h"
 
 namespace vul {
 Window::Window(const windowDef& def)

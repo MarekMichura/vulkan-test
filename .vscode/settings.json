@@ -14,6 +14,7 @@
     "**/build/_deps": true,
     "editor.suggestOnTriggerCharacters": true
   },
+  "C_Cpp.codeAnalysis.clangTidy.enabled": true,
   "search.exclude": {
     "**/build/_deps": true
   },

@@ -1,12 +1,14 @@
 #pragma once
 
-#include <vulkan/vulkan_core.h>
 #include <memory>
 #include <optional>
 #include <vector>
+
+#include <vulkan/vulkan_core.h>
+
+#include "types.h"
 #include "vulkanDebugger.hpp"
 #include "vulkanDevice.hpp"
-#include "types.h"
 
 namespace vul {
 class VulkanInit {
@@ -20,8 +22,8 @@ private:
 
 #ifdef DEBUG
     bool enableDebugger = true;
-    std::vector<const char*> layers = {"VK_LAYER_KHRONOS_validation"};
-    std::vector<const char*> extensions = {VK_EXT_DEBUG_UTILS_EXTENSION_NAME};
+    std::vector<const char*> layers{"VK_LAYER_KHRONOS_validation"};
+    std::vector<const char*> extensions{VK_EXT_DEBUG_UTILS_EXTENSION_NAME};
 #else
     bool enableDebugger = false;
     std::vector<const char*> layers{};
@@ -35,7 +37,7 @@ public:
   VulkanInit& operator=(const VulkanInit&) = delete;
   VulkanInit& operator=(VulkanInit&&) = delete;
 
-  VulkanInit(const VulkanDef& def);
+  explicit VulkanInit(const VulkanDef& def);
   ~VulkanInit() = default;
 
 private:

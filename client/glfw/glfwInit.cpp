@@ -1,6 +1,8 @@
-#include <stdexcept>
-#include "GLFW/glfw3.h"
 #include "glfwInit.hpp"
+
+#include <stdexcept>
+
+#include "GLFW/glfw3.h"
 
 namespace vul {
 GlfwInit::GlfwInit()

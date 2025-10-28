@@ -1,17 +1,31 @@
-Checks: 'clang-analyzer-*,
-        bugprone-*,
-        readability-*,
-        cppcoreguidelines-*,
-        -readability-avoid-const-params-in-decls,
-        -cppcoreguidelines-avoid-non-const-global-variables,
-        -bugprone-easily-swappable-parameters,
+Checks: '
+        *,
+
         -altera-*,
+        -google-*,
+        -boost-*,
+        -fuchsia-*, 
+        -llvmlibc-*,
+        
+        -cppcoreguidelines-pro-*, 
+        -cppcoreguidelines-avoid-magic-numbers, 
+        -cppcoreguidelines-owning-memory,
+        
+        -modernize-use-trailing-return-type,
+        -hicpp-no-array-decay,
+
+        -readability-identifier-length,
+        -readability-function-cognitive-complexity, 
         -readability-uppercase-literal-suffix,
-        -bugprone-branch-clone,
-        -cppcoreguidelines-pro-*,
-        -readability-function-cognitive-complexity,
-        -cppcoreguidelines-avoid-magic-numbers,
-        -clang-analyzer-security.insecureAPI.*'
+        -readability-magic-numbers, 
+        
+        -bugprone-branch-clone, 
+        -bugprone-easily-swappable-parameters, 
+        
+        -clang-analyzer-security.insecureAPI.*,
+
+        bugprone-header-guard,
+        '
 WarningsAsErrors: ''
 HeaderFilterRegex: ''
 CheckOptions:
@@ -21,5 +35,3 @@ CheckOptions:
     value:            '0;1;2;3;4;5;6;7;8;9;'
   - key:              readability-identifier-length.IgnoredVariableNames
     value:            'it'
-  - key:              cppcoreguidelines-macro-usage.AllowedRegexp
-    value:            '.*'

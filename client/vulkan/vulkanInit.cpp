@@ -1,15 +1,17 @@
-#include <vulkan/vulkan_core.h>
+#include "vulkanInit.hpp"
+
 #include <algorithm>
 #include <cstring>
 #include <format>
-#include <print>
 #include <stdexcept>
 #include <string>
 #include <vector>
+
 #include "GLFW/glfw3.h"
-#include "types.h"
-#include "vulkanInit.hpp"
+#include <vulkan/vulkan_core.h>
+
 #include "printTable.hpp"
+#include "types.h"
 
 namespace vul {
 VulkanInit::VulkanInit(const VulkanDef& def)
@@ -91,9 +93,10 @@ std::vector<VkExtensionProperties> VulkanInit::getAllAvailableExtensions()
   }
 
 #ifdef DEBUG
-  printTable("Vulkan Extensions", extensions,
-             {{.header = "Name", .toString = [](const auto& ele) { return ele.extensionName; }},
-              {.header = "Version", .toString = [](const auto& ele) { return std::to_string(ele.specVersion); }}});
+  printTable::print(
+      "Vulkan Extensions", extensions,
+      {{.header = "Name", .toString = [](const auto& ele) { return ele.extensionName; }},
+       {.header = "Version", .toString = [](const auto& ele) { return printTable::version(ele.specVersion); }}});
 #endif
 
   return extensions;
@@ -114,11 +117,12 @@ std::vector<VkLayerProperties> VulkanInit::getAllAvailableLayers()
   }
 
 #ifdef DEBUG
-  printTable("Vulkan layers", layers,
-             {{.header = "Name", .toString = [](const auto& ele) { return ele.layerName; }},
-              {.header = "Version", .toString = [](const auto& ele) { return std::to_string(ele.specVersion); }},
-              {.header = "Implementation",
-               .toString = [](const auto& ele) { return std::to_string(ele.implementationVersion); }}});
+  printTable::print(  //
+      "Vulkan layers", layers,
+      {{.header = "Name", .toString = [](const auto& ele) { return ele.layerName; }},
+       {.header = "Version", .toString = [](const auto& ele) { return printTable::version(ele.specVersion); }},
+       {.header = "Implementation",
+        .toString = [](const auto& ele) { return printTable::version(ele.implementationVersion); }}});
 #endif
 
   return layers;
@@ -128,9 +132,9 @@ void VulkanInit::checkExtensions(const std::vector<const char*>& extensions,
                                  const std::vector<VkExtensionProperties>& availableExtensions)
 {
   for (const auto* const extension : extensions) {
-    auto it = std::find_if(
-        availableExtensions.begin(), availableExtensions.end(),
-        [&extension](const VkExtensionProperties& ext) { return std::strcmp(extension, ext.extensionName) == 0; });
+    auto it = std::ranges::find_if(availableExtensions, [&extension](const VkExtensionProperties& ext) {
+      return std::strcmp(extension, ext.extensionName) == 0;
+    });
 
     if (it == availableExtensions.end()) {
       throw std::runtime_error(std::format("Extension: {} is not available", extension));
@@ -142,8 +146,8 @@ void VulkanInit::checkLayers(const std::vector<const char*>& layers,
                              const std::vector<VkLayerProperties>& availableLayers)
 {
   for (const auto* const layer : layers) {
-    auto it = std::find_if(availableLayers.begin(), availableLayers.end(),
-                           [&layer](const VkLayerProperties& ext) { return std::strcmp(layer, ext.layerName) == 0; });
+    auto it = std::ranges::find_if(
+        availableLayers, [&layer](const VkLayerProperties& ext) { return std::strcmp(layer, ext.layerName) == 0; });
 
     if (it == availableLayers.end()) {
       throw std::runtime_error(std::format("Layer: {} is not available", layer));

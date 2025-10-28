@@ -1,7 +1,8 @@
 #pragma once
 #include <string>
-#include "vulkanInit.hpp"
+
 #include "glfwInit.hpp"
+#include "vulkanInit.hpp"
 #include "window.hpp"
 
 namespace vul {

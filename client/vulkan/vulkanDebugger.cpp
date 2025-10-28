@@ -1,15 +1,18 @@
+#include "vulkanDebugger.hpp"
+
 #include <algorithm>
 #include <chrono>
 #include <cstring>
 #include <iostream>
 #include <stdexcept>
 #include <vector>
-#include "types.h"
+
 #include <vulkan/vulkan_core.h>
-#include "vulkanDebugger.hpp"
+
+#include "types.h"
 
 namespace vul {
-VulkanDebugger::VulkanDebugger(const VkInstance instance,
+VulkanDebugger::VulkanDebugger(const VkInstance& instance,
                                const std::vector<const char*>& extensions,
                                const std::vector<const char*>& layers)
     : _instance(instance), _debugMessenger(createDebugMessenger(extensions, layers))
@@ -31,13 +34,11 @@ VulkanDebugger::~VulkanDebugger()
 void VulkanDebugger::checkIfExtensionIsAvailable(const std::vector<const char*>& extensions,
                                                  const std::vector<const char*>& layers)
 {
-  auto extensionIt = std::find_if(  //
-      extensions.begin(), extensions.end(),
-      [](const char* str) { return std::strcmp(str, VK_EXT_DEBUG_UTILS_EXTENSION_NAME) == 0; });
+  auto extensionIt = std::ranges::find_if(
+      extensions, [](const char* str) { return std::strcmp(str, VK_EXT_DEBUG_UTILS_EXTENSION_NAME) == 0; });
 
-  auto layerIt = std::find_if(  //
-      layers.begin(), layers.end(),
-      [](const char* str) { return std::strcmp(str, "VK_LAYER_KHRONOS_validation") == 0; });
+  auto layerIt = std::ranges::find_if(
+      layers, [](const char* str) { return std::strcmp(str, "VK_LAYER_KHRONOS_validation") == 0; });
 
   if (extensionIt == extensions.end() || layerIt == layers.end()) {
     throw std::runtime_error("Vulkan debuging extension is off");
@@ -52,12 +53,12 @@ VkDebugUtilsMessengerEXT VulkanDebugger::createDebugMessenger(const std::vector<
       .sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT,
       .pNext = nullptr,
       .flags = 0,
-      .messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT |  //
-                         VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |  //
-                         VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT,     //
-      .messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |          //
-                     VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |       //
-                     VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT,
+      .messageSeverity = static_cast<uint32>(VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT) |
+                         static_cast<uint32>(VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT) |
+                         static_cast<uint32>(VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT),
+      .messageType = static_cast<uint32>(VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT) |
+                     static_cast<uint32>(VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT) |
+                     static_cast<uint32>(VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT),
       .pfnUserCallback = debugCallback,
       .pUserData = nullptr,
   };
@@ -84,35 +85,35 @@ VKAPI_ATTR uint32 VKAPI_CALL VulkanDebugger::debugCallback(  //
   out << "\t" << std::format("[{0:%H:%M:%S}] ", time_point_cast<std::chrono::seconds>(now));
 
   switch (messageType) {
-    case VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT:
-      out << "[Validation] ";
-      break;
-    case VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT:
-      out << "[Performance] ";
-      break;
-    case VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT:
-      out << "[General] ";
-      break;
-    default:
-      break;
+  case VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT:
+    out << "[Validation] ";
+    break;
+  case VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT:
+    out << "[Performance] ";
+    break;
+  case VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT:
+    out << "[General] ";
+    break;
+  default:
+    break;
   }
 
   switch (messageSeverity) {  // color select
-    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
-      out << "\033[31m";
-      break;
-    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
-      out << "\033[33m";
-      break;
-    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
-      out << "\033[34m";
-      break;
-    default:
-      out << "\033[37m";
-      break;
+  case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
+    out << "\033[31m";
+    break;
+  case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
+    out << "\033[33m";
+    break;
+  case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
+    out << "\033[34m";
+    break;
+  default:
+    out << "\033[37m";
+    break;
   }
 
-  out << pCallbackData->pMessage << "\033[0m" << std::endl;
+  out << pCallbackData->pMessage << "\033[0m'\n'";
   return VK_FALSE;
 }
 

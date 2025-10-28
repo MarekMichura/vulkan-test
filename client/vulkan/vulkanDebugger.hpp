@@ -1,6 +1,10 @@
+#pragma once
+
+#include <vector>
+
 #include <vulkan/vk_platform.h>
 #include <vulkan/vulkan_core.h>
-#include <vector>
+
 #include "types.h"
 
 namespace vul {
@@ -11,14 +15,14 @@ public:
   VulkanDebugger& operator=(const VulkanDebugger&) = delete;
   VulkanDebugger& operator=(VulkanDebugger&&) = delete;
 
-  VulkanDebugger(const VkInstance instance,
+  VulkanDebugger(const VkInstance& instance,
                  const std::vector<const char*>& extensions,
                  const std::vector<const char*>& layers);
   ~VulkanDebugger();
 
 private:
-  const VkInstance _instance;
-  const VkDebugUtilsMessengerEXT _debugMessenger;
+  const VkInstance _instance;                      // NOLINT(misc-misplaced-const)
+  const VkDebugUtilsMessengerEXT _debugMessenger;  // NOLINT(misc-misplaced-const)
 
   static void checkIfExtensionIsAvailable(const std::vector<const char*>& extensions,
                                           const std::vector<const char*>& layers);
