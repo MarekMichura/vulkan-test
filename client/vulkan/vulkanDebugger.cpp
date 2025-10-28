@@ -2,14 +2,15 @@
 
 #include <algorithm>
 #include <chrono>
+#include <cstdint>
 #include <cstring>
+#include <format>
 #include <iostream>
 #include <stdexcept>
 #include <vector>
 
+#include <vulkan/vk_platform.h>
 #include <vulkan/vulkan_core.h>
-
-#include "types.h"
 
 namespace vul {
 VulkanDebugger::VulkanDebugger(const VkInstance& instance,
@@ -49,16 +50,16 @@ VkDebugUtilsMessengerEXT VulkanDebugger::createDebugMessenger(const std::vector<
                                                               const std::vector<const char*>& layers)
 {
   checkIfExtensionIsAvailable(extensions, layers);
-  VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo{
+  const VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo{
       .sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT,
       .pNext = nullptr,
       .flags = 0,
-      .messageSeverity = static_cast<uint32>(VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT) |
-                         static_cast<uint32>(VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT) |
-                         static_cast<uint32>(VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT),
-      .messageType = static_cast<uint32>(VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT) |
-                     static_cast<uint32>(VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT) |
-                     static_cast<uint32>(VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT),
+      .messageSeverity = static_cast<uint32_t>(VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT) |
+                         static_cast<uint32_t>(VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT) |
+                         static_cast<uint32_t>(VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT),
+      .messageType = static_cast<uint32_t>(VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT) |
+                     static_cast<uint32_t>(VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT) |
+                     static_cast<uint32_t>(VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT),
       .pfnUserCallback = debugCallback,
       .pUserData = nullptr,
   };
@@ -73,7 +74,7 @@ VkDebugUtilsMessengerEXT VulkanDebugger::createDebugMessenger(const std::vector<
   return debugMessenger;
 }
 
-VKAPI_ATTR uint32 VKAPI_CALL VulkanDebugger::debugCallback(  //
+VKAPI_ATTR uint32_t VKAPI_CALL VulkanDebugger::debugCallback(  //
     VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
     VkDebugUtilsMessageTypeFlagsEXT messageType,
     const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,

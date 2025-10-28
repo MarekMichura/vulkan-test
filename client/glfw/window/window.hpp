@@ -26,10 +26,10 @@ public:
   Window& operator=(const Window&) = delete;
   Window& operator=(Window&&) = delete;
 
-  Window(const windowDef& def);
+  explicit Window(const windowDef& def);
   ~Window() = default;
 
-  bool shouldClose() const;
+  [[nodiscard]] bool shouldClose() const;
 
 private:
   const int _width;

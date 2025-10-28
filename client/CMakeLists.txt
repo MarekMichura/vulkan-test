@@ -9,7 +9,7 @@ target_sources(${PROJECT_NAME}-Client PRIVATE ${CLIENT_SOURCES})
 target_compile_features(${PROJECT_NAME}-Client PRIVATE cxx_std_23)
 target_compile_options(${PROJECT_NAME}-Client PRIVATE ${FLAGS})
 target_compile_definitions(${PROJECT_NAME}-Client PRIVATE $<$<CONFIG:Debug>:DEBUG>)
-target_link_libraries(${PROJECT_NAME}-Client PRIVATE Vulkan::Vulkan volk glfw)
+target_link_libraries(${PROJECT_NAME}-Client PRIVATE Vulkan::Vulkan glfw)
 
 target_include_directories(${PROJECT_NAME}-Client
   SYSTEM PRIVATE

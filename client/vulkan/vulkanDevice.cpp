@@ -1,6 +1,7 @@
 #include "vulkanDevice.hpp"
 
 #include <algorithm>
+#include <cstdint>
 #include <format>
 #include <ranges>
 #include <stdexcept>
@@ -10,7 +11,6 @@
 #include <vulkan/vulkan_core.h>
 
 #include "printTable.hpp"
-#include "types.h"
 
 namespace vul {
 VulkanDevice::VulkanDevice(const VkInstance& instance) : _instance(instance), _physicalDevice(selectPhysicalDevices())
@@ -139,7 +139,7 @@ VkPhysicalDevice VulkanDevice::selectPhysicalDevices()
 
 std::vector<VkPhysicalDevice> VulkanDevice::getPhysicalDevices()
 {
-  uint32 deviceCount = 0;
+  uint32_t deviceCount = 0;
   auto status = vkEnumeratePhysicalDevices(_instance, &deviceCount, nullptr);
   if (deviceCount == 0 || status != VK_SUCCESS) {
     throw std::runtime_error("No GPUs with Vulkan support found!");

@@ -1,6 +1,7 @@
 Checks: '
         *,
 
+        -bugprone-header-guard,
         -altera-*,
         -google-*,
         -boost-*,
@@ -23,8 +24,6 @@ Checks: '
         -bugprone-easily-swappable-parameters, 
         
         -clang-analyzer-security.insecureAPI.*,
-
-        bugprone-header-guard,
         '
 WarningsAsErrors: ''
 HeaderFilterRegex: ''

@@ -1,12 +1,12 @@
 #pragma once
 
+#include <cstdint>
 #include <memory>
 #include <optional>
 #include <vector>
 
 #include <vulkan/vulkan_core.h>
 
-#include "types.h"
 #include "vulkanDebugger.hpp"
 #include "vulkanDevice.hpp"
 
@@ -17,8 +17,8 @@ private:
     const char* appName = "appName";
     const char* engineName = "engineName";
 
-    uint32 appVersion = VK_MAKE_VERSION(1, 0, 0);
-    uint32 engineVersion = VK_MAKE_VERSION(1, 0, 0);
+    uint32_t appVersion = VK_MAKE_VERSION(1, 0, 0);
+    uint32_t engineVersion = VK_MAKE_VERSION(1, 0, 0);
 
 #ifdef DEBUG
     bool enableDebugger = true;

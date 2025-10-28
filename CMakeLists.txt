@@ -101,11 +101,30 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(vulkan_headers)
 
 FetchContent_Declare(
+  vulkan_headers
+  GIT_TAG master
+  GIT_REPOSITORY https://github.com/KhronosGroup/Vulkan-Headers.git
+)
+FetchContent_MakeAvailable(vulkan_headers)
+
+FetchContent_Declare(
   volk
   GIT_TAG master
   GIT_REPOSITORY https://github.com/zeux/volk.git)
 FetchContent_MakeAvailable(volk)
+target_include_directories(volk PRIVATE ${vulkan_headers_SOURCE_DIR}/include)
 
-find_package(Vulkan REQUIRED)
+find_package(Vulkan QUIET)
+if(Vulkan_FOUND)
+  message(STATUS "Found system Vulkan SDK — using Vulkan::Vulkan")
+else()
+  message(STATUS "System Vulkan not found — creating Vulkan::Vulkan as interface -> vulkan_headers + volk")
 
+  add_library(Vulkan::Vulkan INTERFACE IMPORTED)
+  set_target_properties(Vulkan::Vulkan PROPERTIES
+    INTERFACE_INCLUDE_DIRECTORIES "${vulkan_headers_SOURCE_DIR}/include"
+  )
+
+  target_link_libraries(Vulkan::Vulkan INTERFACE volk)
+endif()
 add_subdirectory("client")
