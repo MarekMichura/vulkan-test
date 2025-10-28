@@ -4,10 +4,12 @@
 #include <format>
 #include <print>
 #include <stdexcept>
+#include <string>
 #include <vector>
 #include "GLFW/glfw3.h"
 #include "types.h"
 #include "vulkanInit.hpp"
+#include "printTable.hpp"
 
 namespace vul {
 VulkanInit::VulkanInit(const VulkanDef& def)
@@ -89,17 +91,9 @@ std::vector<VkExtensionProperties> VulkanInit::getAllAvailableExtensions()
   }
 
 #ifdef DEBUG
-  constexpr int nameWidth = 40;
-  constexpr int verWidth = 7;
-  constexpr int marginWidth = nameWidth + verWidth + 7;
-
-  std::println("{:=^{}s}", " Vulkan Extensions ", marginWidth);
-  std::println("| {:^{}} | {:^{}} |", "Name", nameWidth, "Version", verWidth);
-  std::println("{:=^{}s}", "", marginWidth);
-  for (const auto& ele : extensions) {
-    std::println("|-{:-^{}}-|-{:-^{}}-|", ele.extensionName, nameWidth, ele.specVersion, verWidth);
-  }
-  std::println("{:=^{}s}\n", "", marginWidth);
+  printTable("Vulkan Extensions", extensions,
+             {{.header = "Name", .toString = [](const auto& ele) { return ele.extensionName; }},
+              {.header = "Version", .toString = [](const auto& ele) { return std::to_string(ele.specVersion); }}});
 #endif
 
   return extensions;
@@ -120,19 +114,11 @@ std::vector<VkLayerProperties> VulkanInit::getAllAvailableLayers()
   }
 
 #ifdef DEBUG
-  constexpr int nameWidth = 40;
-  constexpr int verWidth = 7;
-  constexpr int impWidth = 14;
-  constexpr int marginWidth = nameWidth + verWidth + impWidth + 9;
-
-  std::println("{:=^{}s}", " Vulkan Layers ", marginWidth);
-  std::println("| {:^{}} | {:^{}} | {:^{}} |", "Name", nameWidth, "Version", verWidth, "Implementation", impWidth);
-  std::println("{:=^{}s}", "", marginWidth);
-  for (const auto& ele : layers) {
-    std::println("|-{:-^{}}-|-{:-^{}}-|-{:-^{}}-|",  //
-                 ele.layerName, nameWidth, ele.specVersion, verWidth, ele.implementationVersion, impWidth);
-  }
-  std::println("{:=^{}s}\n", "", marginWidth);
+  printTable("Vulkan layers", layers,
+             {{.header = "Name", .toString = [](const auto& ele) { return ele.layerName; }},
+              {.header = "Version", .toString = [](const auto& ele) { return std::to_string(ele.specVersion); }},
+              {.header = "Implementation",
+               .toString = [](const auto& ele) { return std::to_string(ele.implementationVersion); }}});
 #endif
 
   return layers;

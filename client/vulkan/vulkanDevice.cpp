@@ -1,12 +1,12 @@
+#include <vulkan/vulkan_core.h>
 #include <algorithm>
-#include <print>
 #include <stdexcept>
 #include <string>
 #include <ranges>
 #include <vector>
 #include "types.h"
 #include "vulkanDevice.hpp"
-#include <vulkan/vulkan_core.h>
+#include "printTable.hpp"
 
 namespace vul {
 VulkanDevice::VulkanDevice(const VkInstance instance) : _instance(instance), _physicalDevice(selectPhysicalDevices()) {}
@@ -16,24 +16,14 @@ VkPhysicalDevice VulkanDevice::selectPhysicalDevices()
   auto devicesData = getDeviceData(getPhysicalDevices());
 
 #ifdef DEBUG
-  constexpr int width = 10;
-  constexpr int nameWidth = 50;
-  constexpr int typeWidth = 12;
-  constexpr int marginWidth = (width * 5) + nameWidth + typeWidth + 27;
-
-  std::println("{:=^{}s}", " Vulkan devices ", marginWidth);
-  std::println("| {:^{}} | {:^{}} | {:^{}} | {:^{}} | {:^{}} | {:^{}} | ",  //
-               "ID", width, "Name", nameWidth, "Type", typeWidth, "Api", width, "driver", width, "vendor", width
-
-  );
-  std::println("{:=^{}s}", "", marginWidth);
-  for (const auto& element : devicesData) {
-    auto ele = element.second;
-    std::println("| {:^{}} | {:^{}} | {:^{}} | {:^{}} | {:^{}} | {:^{}} |",                          //
-                 ele.deviceID, width, ele.deviceName, nameWidth, getDeviceTypeName(ele.deviceType),  //
-                 typeWidth, ele.apiVersion, width, ele.driverVersion, width, ele.vendorID, width);
-  }
-  std::println("{:=^{}s}\n", "", marginWidth);
+  printTable(
+      "Vulkan Device", devicesData,
+      {{.header = "id", .toString = [](const auto& ele) { return std::to_string(ele.second.deviceID); }},
+       {.header = "Name", .toString = [](const auto& ele) { return ele.second.deviceName; }},
+       {.header = "type", .toString = [](const auto& ele) { return getDeviceTypeName(ele.second.deviceType); }},
+       {.header = "api", .toString = [](const auto& ele) { return std::to_string(ele.second.apiVersion); }},
+       {.header = "driver", .toString = [](const auto& ele) { return std::to_string(ele.second.driverVersion); }},
+       {.header = "vendor", .toString = [](const auto& ele) { return std::to_string(ele.second.vendorID); }}});
 #endif
 
   auto rateType = [](const VkPhysicalDeviceProperties& data) -> int {
@@ -84,7 +74,7 @@ std::vector<VkPhysicalDevice> VulkanDevice::getPhysicalDevices()
   return devices;
 }
 
-std::vector<std::pair<VkPhysicalDevice, VkPhysicalDeviceProperties>> getDeviceData(
+std::vector<std::pair<VkPhysicalDevice, VkPhysicalDeviceProperties>> VulkanDevice::getDeviceData(
     const std::vector<VkPhysicalDevice>& devices)
 {
   std::vector<std::pair<VkPhysicalDevice, VkPhysicalDeviceProperties>> deviceData;
