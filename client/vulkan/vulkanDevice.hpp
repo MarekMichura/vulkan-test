@@ -1,4 +1,5 @@
-#pragma once
+#ifndef VULKAN_DEVICE_HPP
+#define VULKAN_DEVICE_HPP
 
 #include <string>
 #include <vector>
@@ -34,3 +35,5 @@ private:
   static std::string getDeviceTypeName(VkPhysicalDeviceType type);
 };
 }  // namespace vul
+
+#endif

@@ -1,32 +1,27 @@
-Checks: '
-        *,
+Checks: >
+  *,
+  -altera-*,
+  -google-*,
+  -boost-*,
+  -fuchsia-*, 
+  -llvmlibc-*,
+  -llvm-header-guard,
+  -bugprone-header-guard,
+  -cppcoreguidelines-pro-*,
+  -cppcoreguidelines-avoid-magic-numbers,
+  -cppcoreguidelines-owning-memory,
+  -modernize-use-trailing-return-type,
+  -hicpp-no-array-decay,
+  -readability-identifier-length,
+  -readability-function-cognitive-complexity,
+  -readability-uppercase-literal-suffix,
+  -readability-magic-numbers,
+  -bugprone-branch-clone,
+  -bugprone-easily-swappable-parameters,
+  -clang-analyzer-security.insecureAPI.*
 
-        -bugprone-header-guard,
-        -altera-*,
-        -google-*,
-        -boost-*,
-        -fuchsia-*, 
-        -llvmlibc-*,
-        
-        -cppcoreguidelines-pro-*, 
-        -cppcoreguidelines-avoid-magic-numbers, 
-        -cppcoreguidelines-owning-memory,
-        
-        -modernize-use-trailing-return-type,
-        -hicpp-no-array-decay,
-
-        -readability-identifier-length,
-        -readability-function-cognitive-complexity, 
-        -readability-uppercase-literal-suffix,
-        -readability-magic-numbers, 
-        
-        -bugprone-branch-clone, 
-        -bugprone-easily-swappable-parameters, 
-        
-        -clang-analyzer-security.insecureAPI.*,
-        '
+HeaderFilterRegex: 'client/.*'
 WarningsAsErrors: ''
-HeaderFilterRegex: ''
 CheckOptions:
   - key:              readability-magic-numbers.IgnoredFloatingPointValues
     value:            '0.0;1.0;100.0;'

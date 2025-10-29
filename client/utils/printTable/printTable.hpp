@@ -1,4 +1,6 @@
-#pragma once
+#ifndef PRINT_TABLE_HPP
+#define PRINT_TABLE_HPP
+
 #include <algorithm>
 #include <cassert>
 #include <cstddef>
@@ -10,22 +12,27 @@
 #include <print>
 #include <string>
 #include <tuple>
+#include <type_traits>
+#include <utility>
 #include <vector>
 
 namespace vul {
 class printTable {
 private:
+  static std::string stripAnsi(const std::string& s);
+  static size_t visibleLength(const std::string& s);
+
+public:
+  enum class Align : std::uint8_t { left, right, center };
+
   template <typename T>
   struct TableColumn {
     std::string header;
     std::function<std::string(const T&)> toString;
     std::optional<size_t> width = std::nullopt;
+    std::optional<Align> align = std::nullopt;
   };
 
-  static std::string stripAnsi(const std::string& s);
-  static size_t visibleLength(const std::string& s);
-
-public:
   template <typename T>
   static void print(const std::string& tableName,
                     const std::vector<T>& rows,
@@ -38,15 +45,47 @@ public:
 
 std::string printTable::number(auto ele)
 {
-  std::string s;
-  try {
-    s = std::format(std::locale("en_US.UTF-8"), "{:L}", ele);
+  using T = std::remove_cvref_t<decltype(ele)>;
+
+  if constexpr (std::is_array_v<T>) {
+    std::string str = "[";
+    for (size_t i = 0; i < std::size(ele); ++i) {
+      if (i > 0) {
+        str += ", ";
+      }
+      try {
+        str += std::format(std::locale("en_US.UTF-8"), "{:L}", ele[i]);
+      }
+      catch (...) {
+        str += std::to_string(ele[i]);
+      }
+    }
+    str += "]";
+    std::ranges::replace(str, ',', '_');
+    return str;
   }
-  catch (...) {
-    s = std::to_string(ele);
+  else if constexpr (std::is_pointer_v<T>) {
+    std::string str = "[";
+    for (int i = 0; i < 2; ++i) {  // zakładamy rozmiar 2, np. Vulkan ranges
+      if (i) {
+        str += ", ";
+      }
+      str += printTable::number(ele[i]);
+    }
+    str += "]";
+    return str;
   }
-  std::ranges::replace(s, ',', '_');
-  return s;
+  else {
+    std::string str;
+    try {
+      str = std::format(std::locale("en_US.UTF-8"), "{:L}", ele);
+    }
+    catch (...) {
+      str = std::to_string(ele);
+    }
+    std::ranges::replace(str, ',', '_');
+    return str;
+  }
 }
 
 template <typename T>
@@ -85,10 +124,25 @@ void printTable::print(const std::string& tableName,
 
   for (size_t i = 0; i < rows.size(); i++) {
     for (const auto& [col, width, strings] : preparedColumns) {
-      std::print("| {:^{}} ", strings[i], width + (strings[i].size() - stripAnsi(strings[i]).size()));
+      auto str = strings[i];
+      auto myWidth = width + (strings[i].size() - stripAnsi(strings[i]).size());
+
+      switch (col.align.value_or(Align::center)) {
+      case Align::left:
+        std::print("| {:<{}} ", str, myWidth);
+        break;
+      case Align::right:
+        std::print("| {:>{}} ", str, myWidth);
+        break;
+      default:
+      case Align::center:
+        std::print("| {:^{}} ", str, myWidth);
+      }
     }
     std::println("|");
   }
   std::println("{:=^{}}", "", fullWidth);
 }
 }  // namespace vul
+
+#endif

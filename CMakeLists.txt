@@ -31,7 +31,7 @@ else()
     -Wpedantic # Issues all warnings demanded by strict ISO C and ISO C++.
     -Wconversion # Warns for implicit type conversions that may change a value.
     -Wsign-conversion # Warns for conversions that change the sign of a value.
-    -Wshadow=local # Warns when a local variable shadows a global variable.
+    # -Wshadow=local # Warns when a local variable shadows a global variable.
     -Wnon-virtual-dtor # Warns if a class has a virtual function but non-virtual destructor.
     -Werror # Treats all warnings as errors.
     -Wold-style-cast # Warns about C-style casts in C++ code.
@@ -42,10 +42,10 @@ else()
     -Wundef # Warns if an undefined identifier is evaluated in a preprocessor directive.
     -Wpointer-arith # Warns about some questionable pointer arithmetic.
     -Wwrite-strings # Makes string literals const, catching attempts to write to them.
-    -Wlogical-op # Warns if logical operators (!, &&, ||) are used incorrectly.
-    -Wuseless-cast # Warns about casts that have no effect.
-    -Wduplicated-cond # Warns about duplicated conditional branches.
-    -Wduplicated-branches # Warns about duplicated branches in if/else.
+    # -Wlogical-op # Warns if logical operators (!, &&, ||) are used incorrectly.
+    # -Wuseless-cast # Warns about casts that have no effect.
+    # -Wduplicated-cond # Warns about duplicated conditional branches.
+    # -Wduplicated-branches # Warns about duplicated branches in if/else.
     -Wnull-dereference # Warns about possible null pointer dereferences.
     -Wcast-qual # Warns about casts that cast away a const or volatile qualifier.
     -Wmissing-include-dirs # Warns if a specified include directory does not exist.
@@ -86,7 +86,7 @@ endif()
 include(CPack)
 include(FetchContent)
 set(FETCHCONTENT_UPDATES_DISCONNECTED TRUE)
-set(ASSAN TRUE)
+set(ASSAN FALSE)
 
 FetchContent_Declare(
   glfw

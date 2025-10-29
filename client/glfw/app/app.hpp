@@ -1,4 +1,6 @@
-#pragma once
+#ifndef APP_HPP
+#define APP_HPP
+
 #include <string>
 
 #include "glfwInit.hpp"
@@ -21,3 +23,5 @@ private:
   vul::Window _window{{.width = width, .height = height, .title = title}};
 };
 }  // namespace vul
+
+#endif

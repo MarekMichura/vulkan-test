@@ -20,6 +20,7 @@
       "args": [
         "-p",
         "${workspaceFolder}/build",
+        "--fix",
         "--config-file=${workspaceFolder}/.clang-tidy",
         "${workspaceFolder}/client/**/*.{cpp,hpp,h,c}"
       ],

@@ -1,4 +1,6 @@
-#pragma once
+#ifndef WINDOW_HPP
+#define WINDOW_HPP
+
 #define GLFW_INCLUDE_VULKAN
 
 #include <memory>
@@ -38,3 +40,5 @@ private:
   std::unique_ptr<GLFWwindow, void (*)(GLFWwindow*)> _window;
 };
 }  // namespace vul
+
+#endif

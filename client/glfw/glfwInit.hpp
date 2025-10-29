@@ -1,4 +1,5 @@
-#pragma once
+#ifndef GLFW_INIT_HPP
+#define GLFW_INIT_HPP
 
 namespace vul {
 class GlfwInit {
@@ -12,3 +13,5 @@ public:
   ~GlfwInit();
 };
 }  // namespace vul
+
+#endif

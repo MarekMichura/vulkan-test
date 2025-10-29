@@ -1,4 +1,5 @@
-#pragma once
+#ifndef VULKAN_INIT_HPP
+#define VULKAN_INIT_HPP
 
 #include <cstdint>
 #include <memory>
@@ -59,3 +60,5 @@ private:
 };
 
 }  // namespace vul
+
+#endif

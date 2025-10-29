@@ -1,4 +1,5 @@
-#pragma once
+#ifndef VULKAN_DEBUGGER_HPP
+#define VULKAN_DEBUGGER_HPP
 
 #include <cstdint>
 #include <vector>
@@ -27,10 +28,11 @@ private:
                                           const std::vector<const char*>& layers);
   VkDebugUtilsMessengerEXT createDebugMessenger(const std::vector<const char*>& extensions,
                                                 const std::vector<const char*>& layers);
-  static VKAPI_ATTR uint32_t VKAPI_CALL debugCallback(  //
-      VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-      VkDebugUtilsMessageTypeFlagsEXT messageType,
-      const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
-      void* pUserData);
+  static VKAPI_ATTR uint32_t VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+                                                      VkDebugUtilsMessageTypeFlagsEXT messageType,
+                                                      const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
+                                                      void* pUserData);
 };
 }  // namespace vul
+
+#endif
