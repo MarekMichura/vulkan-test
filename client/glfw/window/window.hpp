@@ -4,7 +4,6 @@
 #define GLFW_INCLUDE_VULKAN
 
 #include <memory>
-#include <string>
 #include <string_view>
 
 #include <GLFW/glfw3.h>
@@ -15,7 +14,7 @@ private:
   struct windowDef {
     int width = defaultWidth;
     int height = defaultHeight;
-    std::string_view title = "Vulkan window";
+    const std::string& title = "Vulkan window";
     int resize = GLFW_FALSE;
 
     constexpr static int defaultWidth = 800;
@@ -34,10 +33,9 @@ public:
   [[nodiscard]] bool shouldClose() const;
 
 private:
-  const int _width;
-  const int _height;
-  const std::string _title;
-  std::unique_ptr<GLFWwindow, void (*)(GLFWwindow*)> _window;
+  const std::unique_ptr<GLFWwindow, void (*)(GLFWwindow*)> _window;
+
+  static GLFWwindow* createWindow(const windowDef& def);
 };
 }  // namespace vul
 

@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 3.20)
 project("Vulkan" "CXX")
 
+# ----------------------------
+# 1. Compiler flags
+# ----------------------------
+
 if(MSVC)
   set(COMMON_FLAGS
     /W4 # Sets warning level to 4, which is very strict.
@@ -83,10 +87,12 @@ else()
   set(FLAGS ${COMMON_FLAGS} ${DEBUG_FLAGS})
 endif()
 
-include(CPack)
+# ----------------------------
+# 2. FetchContent - library
+# ----------------------------
+
 include(FetchContent)
 set(FETCHCONTENT_UPDATES_DISCONNECTED TRUE)
-set(ASSAN FALSE)
 
 FetchContent_Declare(
   glfw
@@ -114,6 +120,10 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(volk)
 target_include_directories(volk PRIVATE ${vulkan_headers_SOURCE_DIR}/include)
 
+# ----------------------------
+# 3. Vulkan SDK – system or download
+# ----------------------------
+
 find_package(Vulkan QUIET)
 if(Vulkan_FOUND)
   message(STATUS "Found system Vulkan SDK — using Vulkan::Vulkan")
@@ -127,4 +137,21 @@ else()
 
   target_link_libraries(Vulkan::Vulkan INTERFACE volk)
 endif()
+
+# ----------------------------
+# 4. Clang-tidy
+# ----------------------------
+
+set(CLANG_TIDY_CHECKS "*, -llvmlibc-*, -llvm-header-guard, -fuchsia-default-arguments-calls, -modernize-use-trailing-return-type, -altera-unroll-loops")
+set(CLANG_TIDY_OPTIONS "-config={\"CheckOptions\":[{\"key\":\"readability-identifier-length.IgnoredVariableNames\",\"value\":\"id|it\"}]}")
+set(CMAKE_CXX_CLANG_TIDY
+  "clang-tidy"
+  "-checks=${CLANG_TIDY_CHECKS}"
+  "${CLANG_TIDY_OPTIONS}"
+)
+
+# ----------------------------
+# 5. Add subdir
+# ----------------------------
+
 add_subdirectory("client")

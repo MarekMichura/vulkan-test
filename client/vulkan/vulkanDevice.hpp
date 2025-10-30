@@ -1,6 +1,8 @@
 #ifndef VULKAN_DEVICE_HPP
 #define VULKAN_DEVICE_HPP
 
+#include <array>
+#include <functional>
 #include <string>
 #include <vector>
 
@@ -33,6 +35,10 @@ private:
 
   static std::vector<DeviceData> getDeviceData(const std::vector<VkPhysicalDevice>& devices);
   static std::string getDeviceTypeName(VkPhysicalDeviceType type);
+
+  using PropertiesT = std::tuple<std::string_view, std::function<std::string(const VulkanDevice::DeviceData&)>>;
+  static const std::array<PropertiesT, 172> deviceProperty;
+  static std::string deviceType(const VkPhysicalDeviceType type);
 };
 }  // namespace vul
 

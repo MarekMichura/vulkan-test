@@ -1,3 +1,7 @@
+# =============================
+# 1. Create executable
+# =============================
+
 add_executable(${PROJECT_NAME}-Client)
 
 file(GLOB_RECURSE CLIENT_SOURCES CONFIGURE_DEPENDS
@@ -11,21 +15,29 @@ target_compile_options(${PROJECT_NAME}-Client PRIVATE ${FLAGS})
 target_compile_definitions(${PROJECT_NAME}-Client PRIVATE $<$<CONFIG:Debug>:DEBUG>)
 target_link_libraries(${PROJECT_NAME}-Client PRIVATE Vulkan::Vulkan glfw)
 
-target_include_directories(${PROJECT_NAME}-Client
-  SYSTEM PRIVATE
-  ${vulkan_headers_SOURCE_DIR}/include
-)
+# =============================
+# 2. Include dir
+# =============================
 
 set(CLIENT_INCLUDE_DIRS "")
 foreach(header ${CLIENT_SOURCES})
   get_filename_component(dir ${header} DIRECTORY)
   list(APPEND CLIENT_INCLUDE_DIRS ${dir})
 endforeach()
-
 list(REMOVE_DUPLICATES CLIENT_INCLUDE_DIRS)
-target_include_directories(${PROJECT_NAME}-Client PRIVATE ${CLIENT_INCLUDE_DIRS})
 
-# ===========================================================================================================
+target_include_directories(${PROJECT_NAME}-Client
+  SYSTEM PRIVATE
+  ${vulkan_headers_SOURCE_DIR}/include
+  ${glfw_SOURCE_DIR}/include
+  ${volk_SOURCE_DIR}/
+  PRIVATE
+  ${CLIENT_INCLUDE_DIRS}
+)
+
+# =============================
+# 3. Shader compile
+# =============================
 
 find_program(GLSLANG_VALIDATOR glslangValidator)
 if(NOT GLSLANG_VALIDATOR)
@@ -66,8 +78,11 @@ endforeach()
 
 add_custom_target(shaders ALL DEPENDS ${SPIRV_SHADERS})
 
-# ===========================================================================================================
+# =============================
+# 4. AddressSanitizer
+# =============================
 
+set(ASSAN FALSE)
 if(CMAKE_BUILD_TYPE STREQUAL "Debug" AND ASSAN AND CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
   message(STATUS "Enabling AddressSanitizer")
 

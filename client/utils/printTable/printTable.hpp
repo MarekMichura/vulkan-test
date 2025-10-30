@@ -11,132 +11,125 @@
 #include <optional>
 #include <print>
 #include <string>
-#include <tuple>
-#include <type_traits>
-#include <utility>
+#include <string_view>
 #include <vector>
+
+template <typename T>
+concept Number = std::integral<T> || std::floating_point<T>;
 
 namespace vul {
 class printTable {
 private:
-  static std::string stripAnsi(const std::string& s);
-  static size_t visibleLength(const std::string& s);
+  static std::string stripAnsi(const std::string&);
+  static size_t visibleLength(const std::string&);
 
 public:
   enum class Align : std::uint8_t { left, right, center };
 
   template <typename T>
   struct TableColumn {
-    std::string header;
+    std::string_view header;
     std::function<std::string(const T&)> toString;
     std::optional<size_t> width = std::nullopt;
     std::optional<Align> align = std::nullopt;
   };
 
+private:
   template <typename T>
-  static void print(const std::string& tableName,
-                    const std::vector<T>& rows,
-                    const std::vector<TableColumn<T>>& columns);
+  struct PreparedColumnT {
+    const TableColumn<T>& column;
+    size_t columnWidth;
+    std::vector<std::string> row;
+    std::vector<size_t> rowSize;
+  };
 
-  static std::string version(uint32_t ver);
-  static std::string boolean(bool ele);
-  static std::string number(auto ele);
+public:
+  template <typename T>
+  static void print(const std::string_view, const std::vector<T>&, const std::vector<TableColumn<T>>&);
+
+  static std::string version(uint32_t);
+  static std::string boolean(bool);
+  template <Number T>
+  static std::string number(T, char = '_');
+  template <typename T>
+  static std::string table(std::span<T>, char = '_');
+  static std::string vendor(uint32_t);
 };
 
-std::string printTable::number(auto ele)
+template <Number T>
+std::string printTable::number(T ele, char floor)
 {
-  using T = std::remove_cvref_t<decltype(ele)>;
-
-  if constexpr (std::is_array_v<T>) {
-    std::string str = "[";
-    for (size_t i = 0; i < std::size(ele); ++i) {
-      if (i > 0) {
-        str += ", ";
-      }
-      try {
-        str += std::format(std::locale("en_US.UTF-8"), "{:L}", ele[i]);
-      }
-      catch (...) {
-        str += std::to_string(ele[i]);
-      }
-    }
-    str += "]";
-    std::ranges::replace(str, ',', '_');
-    return str;
+  std::string str;
+  try {
+    str = std::format(std::locale("en_US.UTF-8"), "{:L}", ele);
   }
-  else if constexpr (std::is_pointer_v<T>) {
-    std::string str = "[";
-    for (int i = 0; i < 2; ++i) {  // zakładamy rozmiar 2, np. Vulkan ranges
-      if (i) {
-        str += ", ";
-      }
-      str += printTable::number(ele[i]);
-    }
-    str += "]";
-    return str;
+  catch (...) {
+    str = std::to_string(ele);
   }
-  else {
-    std::string str;
-    try {
-      str = std::format(std::locale("en_US.UTF-8"), "{:L}", ele);
-    }
-    catch (...) {
-      str = std::to_string(ele);
-    }
-    std::ranges::replace(str, ',', '_');
-    return str;
-  }
+  std::ranges::replace(str, ',', floor);
+  return str;
 }
 
 template <typename T>
-void printTable::print(const std::string& tableName,
+std::string printTable::table(std::span<T> ele, char floor)
+{
+  assert(ele.size() > 0);
+  std::string str = "\033[1;32m[\033[0m" + number(ele[0], floor);
+  for (size_t i = 1; i < ele.size(); i++) {
+    str += "\033[1;31m, \033[0m" + number(ele[i], floor);
+  }
+  str += "\033[1;32m]\033[0m";
+  return str;
+}
+
+template <typename T>
+void printTable::print(const std::string_view tableName,
                        const std::vector<T>& rows,
                        const std::vector<TableColumn<T>>& columns)
 {
   assert(!columns.empty());
   assert(!rows.empty());
 
-  std::vector<std::tuple<const TableColumn<T>&, size_t, std::vector<std::string>>> preparedColumns;
+  std::vector<PreparedColumnT<T>> preparedColumns;
   preparedColumns.reserve(columns.size());
 
-  for (const auto& col : columns) {
-    std::vector<std::string> strings;
-    strings.reserve(rows.size());
-    for (const auto& row : rows) {
-      strings.push_back(col.toString(row));
+  for (const TableColumn<T>& column : columns) {
+    PreparedColumnT t{.column = column, .row = {}, .rowSize = {}};
+    t.row.reserve(rows.size());
+
+    for (const T& row : rows) {
+      std::string rowString = column.toString(row);
+      t.row.push_back(rowString);
+      t.rowSize.push_back(visibleLength(rowString));
     }
 
-    size_t maxWidthString =
-        std::ranges::max_element(strings, {}, [](const std::string& str) { return visibleLength(str); })->size();
-    auto width = std::max({maxWidthString, col.header.size(), col.width.value_or(0)});
-
-    preparedColumns.emplace_back(col, width, std::move(strings));
+    size_t tmp = std::ranges::max(t.rowSize);
+    t.columnWidth = std::max({tmp, column.width.value_or(0), column.header.size()});
+    preparedColumns.push_back(t);
   }
-
-  auto fullWidth = std::ranges::fold_left(preparedColumns, (columns.size() * 3) + 1,
-                                          [](auto size, const auto& col) { return size + std::get<1>(col); });
+  size_t fullWidth = std::ranges::fold_left(  //
+      preparedColumns, (preparedColumns.size() * 3) + 1,
+      [](size_t sum, const PreparedColumnT<T>& column) { return sum + column.columnWidth; });
 
   std::println("\n{:=^{}}", std::format(" {} ", tableName), fullWidth);
-  for (const auto& [col, width, strings] : preparedColumns) {
-    std::print("| {:^{}} ", col.header, width);
+  for (const PreparedColumnT<T>& column : preparedColumns) {
+    std::print("| {:^{}} ", column.column.header, column.columnWidth);
   }
   std::println("|\n{:=^{}}", "", fullWidth);
-
   for (size_t i = 0; i < rows.size(); i++) {
-    for (const auto& [col, width, strings] : preparedColumns) {
-      auto str = strings[i];
-      auto myWidth = width + (strings[i].size() - stripAnsi(strings[i]).size());
+    for (const PreparedColumnT<T>& column : preparedColumns) {
+      std::string_view string = column.row.at(i);
 
-      switch (col.align.value_or(Align::center)) {
+      switch (column.column.align.value_or(Align::center)) {
       case Align::left:
-        std::print("| {:<{}} ", str, myWidth);
+        std::print("| {:<{}} ", string, column.columnWidth + (string.size() - column.rowSize.at(i)));
         break;
       case Align::right:
-        std::print("| {:>{}} ", str, myWidth);
+        std::print("| {:>{}} ", string, column.columnWidth + (string.size() - column.rowSize.at(i)));
         break;
-      default:
       case Align::center:
-        std::print("| {:^{}} ", str, myWidth);
+        std::print("| {:^{}} ", string, column.columnWidth + (string.size() - column.rowSize.at(i)));
+        break;
       }
     }
     std::println("|");

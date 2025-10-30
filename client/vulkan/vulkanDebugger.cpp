@@ -22,7 +22,8 @@ VulkanDebugger::VulkanDebugger(const VkInstance& instance,
 
 VulkanDebugger::~VulkanDebugger()
 {
-  auto func = reinterpret_cast<PFN_vkDestroyDebugUtilsMessengerEXT>(
+  // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
+  auto func = reinterpret_cast<PFN_vkDestroyDebugUtilsMessengerEXT>(  // NOLINT
       vkGetInstanceProcAddr(_instance, "vkDestroyDebugUtilsMessengerEXT"));
   if (func == nullptr) {
     std::cerr << "debug messenger was not destroyed!, vkDestroyDebugUtilsMessengerEXT not found!";
@@ -65,7 +66,8 @@ VkDebugUtilsMessengerEXT VulkanDebugger::createDebugMessenger(const std::vector<
   };
 
   VkDebugUtilsMessengerEXT debugMessenger{};
-  auto func = reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>(
+  // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
+  auto func = reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>(  // NOLINT
       vkGetInstanceProcAddr(_instance, "vkCreateDebugUtilsMessengerEXT"));
   if (func == nullptr || func(_instance, &debugCreateInfo, nullptr, &debugMessenger) != VK_SUCCESS) {
     throw std::runtime_error("failed to set up debug messenger!");
@@ -82,7 +84,7 @@ VKAPI_ATTR uint32_t VKAPI_CALL VulkanDebugger::debugCallback(  //
 {
   std::ostream& out = ((messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT) != 0) ? std::cerr : std::cout;
 
-  auto now = std::chrono::system_clock::now();
+  const std::chrono::time_point now = std::chrono::system_clock::now();
   out << "\t" << std::format("[{0:%H:%M:%S}] ", time_point_cast<std::chrono::seconds>(now));
 
   switch (messageType) {
@@ -101,20 +103,23 @@ VKAPI_ATTR uint32_t VKAPI_CALL VulkanDebugger::debugCallback(  //
 
   switch (messageSeverity) {  // color select
   case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
-    out << "\033[31m";
+    out << "\033[1;31m";
     break;
   case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
-    out << "\033[33m";
+    out << "\033[1;33m";
     break;
   case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
-    out << "\033[34m";
+    out << "\033[1;34m";
+    break;
+  case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
+    out << "\033[1;37m";
     break;
   default:
     out << "\033[37m";
     break;
   }
 
-  out << pCallbackData->pMessage << "\033[0m'\n'";
+  out << pCallbackData->pMessage << "\033[0m\n";
   return VK_FALSE;
 }
 
