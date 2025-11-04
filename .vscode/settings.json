@@ -18,5 +18,9 @@
   "search.exclude": {
     "**/build/_deps": true
   },
-  "hide-files.files": []
+  "cmake.buildDirectory": "${workspaceFolder}/build",
+  "hide-files.files": [],
+  "cSpell.words": [
+    "ASSAN"
+  ]
 }

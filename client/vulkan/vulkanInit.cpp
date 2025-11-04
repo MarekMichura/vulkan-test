@@ -21,9 +21,7 @@
 namespace vul {
 VulkanInit::VulkanInit(const VulkanDef& def)
     : _instance(createInstance(def), [](VkInstance inst) { vkDestroyInstance(inst, nullptr); }),
-      _vulkanDebugger(def.enableDebugger
-                          ? std::make_optional<VulkanDebugger>(_instance.get(), def.extensions, def.layers)
-                          : std::nullopt),
+      _vulkanDebugger(def.enableDebugger ? std::make_optional<VulkanDebugger>(_instance.get(), def.extensions, def.layers) : std::nullopt),
       _vulkanDevice(std::make_unique<VulkanDevice>(_instance.get()))
 {
 }
@@ -138,8 +136,7 @@ std::vector<VkLayerProperties> VulkanInit::getAllAvailableLayers()
   return layers;
 }
 
-void VulkanInit::checkExtensions(const std::vector<const char*>& extensions,
-                                 const std::vector<VkExtensionProperties>& availableExtensions)
+void VulkanInit::checkExtensions(const std::vector<const char*>& extensions, const std::vector<VkExtensionProperties>& availableExtensions)
 {
   for (const char* extension : extensions) {
     const bool found = std::ranges::any_of(availableExtensions, [&extension](const VkExtensionProperties& ext) {
@@ -152,8 +149,7 @@ void VulkanInit::checkExtensions(const std::vector<const char*>& extensions,
   }
 }
 
-void VulkanInit::checkLayers(const std::vector<const char*>& layers,
-                             const std::vector<VkLayerProperties>& availableLayers)
+void VulkanInit::checkLayers(const std::vector<const char*>& layers, const std::vector<VkLayerProperties>& availableLayers)
 {
   for (const auto& layer : layers) {
     const bool found = std::ranges::any_of(availableLayers, [&layer](const VkLayerProperties& lay) {  //

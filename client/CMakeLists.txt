@@ -82,8 +82,7 @@ add_custom_target(shaders ALL DEPENDS ${SPIRV_SHADERS})
 # 4. AddressSanitizer
 # =============================
 
-set(ASSAN FALSE)
-if(CMAKE_BUILD_TYPE STREQUAL "Debug" AND ASSAN AND CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
+if(ASSAN AND CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
   message(STATUS "Enabling AddressSanitizer")
 
   target_compile_options(${PROJECT_NAME}-Client PRIVATE -fsanitize=address,undefined)

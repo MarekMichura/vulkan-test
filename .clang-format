@@ -7,7 +7,7 @@ AllowShortIfStatementsOnASingleLine: Never
 IndentCaseLabels: false
 AccessModifierOffset: -2
 BreakBeforeBraces: Stroustrup
-ColumnLimit: 120 
+ColumnLimit: 140 
 
 IncludeBlocks: Regroup
 SortIncludes: true

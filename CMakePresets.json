@@ -1,0 +1,66 @@
+{
+  "version": 3,
+  "configurePresets": [
+    {
+      "name": "debug",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/",
+      "cacheVariables": {
+        "CMAKE_EXPORT_COMPILE_COMMANDS": true,
+        "CMAKE_BUILD_TYPE": "Debug",
+        "ASSAN": false,
+        "TIDY": false
+      }
+    },
+    {
+      "name": "debug ASSAN",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/",
+      "cacheVariables": {
+        "CMAKE_EXPORT_COMPILE_COMMANDS": true,
+        "CMAKE_BUILD_TYPE": "Debug",
+        "ASSAN": true,
+        "TIDY": false
+      }
+    },
+    {
+      "name": "debug TIDY",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/",
+      "cacheVariables": {
+        "CMAKE_EXPORT_COMPILE_COMMANDS": true,
+        "CMAKE_BUILD_TYPE": "Debug",
+        "ASSAN": false,
+        "TIDY": true
+      }
+    },
+    {
+      "name": "debug ASSAN TIDY",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/",
+      "cacheVariables": {
+        "CMAKE_EXPORT_COMPILE_COMMANDS": true,
+        "CMAKE_BUILD_TYPE": "Debug",
+        "ASSAN": true,
+        "TIDY": true
+      }
+    },
+    {
+      "name": "release",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/",
+      "cacheVariables": {
+        "CMAKE_EXPORT_COMPILE_COMMANDS": true,
+        "CMAKE_BUILD_TYPE": "Release",
+        "ASSAN": false,
+        "TIDY": false
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "default",
+      "jobs": 12
+    }
+  ]
+}

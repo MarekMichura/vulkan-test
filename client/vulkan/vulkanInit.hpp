@@ -54,10 +54,8 @@ private:
   static std::vector<VkLayerProperties> getAllAvailableLayers();
 
   static void createDebugValidation();
-  static void checkExtensions(const std::vector<const char*>& extensions,
-                              const std::vector<VkExtensionProperties>& availableExtensions);
-  static void checkLayers(const std::vector<const char*>& layers,
-                          const std::vector<VkLayerProperties>& availableLayers);
+  static void checkExtensions(const std::vector<const char*>& extensions, const std::vector<VkExtensionProperties>& availableExtensions);
+  static void checkLayers(const std::vector<const char*>& layers, const std::vector<VkLayerProperties>& availableLayers);
 };
 
 }  // namespace vul

@@ -17,9 +17,7 @@
 #include "printTable.hpp"
 
 namespace vul {
-VulkanDevice::VulkanDevice(const VkInstance& instance) : _instance(instance), _physicalDevice(selectPhysicalDevices())
-{
-}
+VulkanDevice::VulkanDevice(const VkInstance& instance) : _instance(instance), _physicalDevice(selectPhysicalDevices()) {}
 
 std::string VulkanDevice::deviceType(const VkPhysicalDeviceType type)
 {
@@ -58,9 +56,7 @@ VkPhysicalDevice VulkanDevice::selectPhysicalDevices()
   }
 
   std::vector<printTable::TableColumn<printInfo>> columns = {
-      {.header = "Var name",
-       .toString = [](const printInfo& ele) { return std::get<0>(ele); },
-       .align = printTable::Align::left}};
+      {.header = "Var name", .toString = [](const printInfo& ele) { return std::get<0>(ele); }, .align = printTable::Align::left}};
 
   for (size_t i = 0; i < devicesData.size(); i++) {
     columns.push_back({.header = std::string_view(static_cast<const char*>(devicesData.at(i).properties.deviceName)),
@@ -88,14 +84,12 @@ VkPhysicalDevice VulkanDevice::selectPhysicalDevices()
     return rateType(ele.properties);
   }));
 
-  auto bestDeviceTypeDevices = std::views::filter(devicesData, [bestDeviceType, rateType](const DeviceData& ele) {
-    return rateType(ele.properties) == bestDeviceType;
-  });
+  auto bestDeviceTypeDevices = std::views::filter(
+      devicesData, [bestDeviceType, rateType](const DeviceData& ele) { return rateType(ele.properties) == bestDeviceType; });
 
-  const DeviceData bestDevice =
-      *std::ranges::max_element(bestDeviceTypeDevices, [](const DeviceData& first, const DeviceData& second) {
-        return first.properties.limits.maxImageDimension2D < second.properties.limits.maxImageDimension2D;
-      });
+  const DeviceData bestDevice = *std::ranges::max_element(bestDeviceTypeDevices, [](const DeviceData& first, const DeviceData& second) {
+    return first.properties.limits.maxImageDimension2D < second.properties.limits.maxImageDimension2D;
+  });
 
   return bestDevice.device;
 }

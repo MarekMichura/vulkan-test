@@ -8,7 +8,6 @@ int main()
 {
   try {
     vul::App app;
-
     app.run();
   }
   catch (const std::exception& e) {

@@ -96,7 +96,7 @@ set(FETCHCONTENT_UPDATES_DISCONNECTED TRUE)
 
 FetchContent_Declare(
   glfw
-  GIT_TAG master
+  GIT_TAG 3.3.10
   GIT_REPOSITORY https://github.com/glfw/glfw)
 FetchContent_MakeAvailable(glfw)
 
@@ -142,13 +142,15 @@ endif()
 # 4. Clang-tidy
 # ----------------------------
 
-set(CLANG_TIDY_CHECKS "*, -llvmlibc-*, -llvm-header-guard, -fuchsia-default-arguments-calls, -modernize-use-trailing-return-type, -altera-unroll-loops")
-set(CLANG_TIDY_OPTIONS "-config={\"CheckOptions\":[{\"key\":\"readability-identifier-length.IgnoredVariableNames\",\"value\":\"id|it\"}]}")
-set(CMAKE_CXX_CLANG_TIDY
-  "clang-tidy"
-  "-checks=${CLANG_TIDY_CHECKS}"
-  "${CLANG_TIDY_OPTIONS}"
-)
+if(TIDY)
+  set(CLANG_TIDY_CHECKS "*, -llvmlibc-*, -llvm-header-guard, -fuchsia-default-arguments-calls, -modernize-use-trailing-return-type, -altera-unroll-loops")
+  set(CLANG_TIDY_OPTIONS "-config={\"CheckOptions\":[{\"key\":\"readability-identifier-length.IgnoredVariableNames\",\"value\":\"id|it\"}]}")
+  set(CMAKE_CXX_CLANG_TIDY
+    "clang-tidy"
+    "-checks=${CLANG_TIDY_CHECKS}"
+    "${CLANG_TIDY_OPTIONS}"
+  )
+endif()
 
 # ----------------------------
 # 5. Add subdir

@@ -33,14 +33,15 @@ VulkanDebugger::~VulkanDebugger()
   }
 }
 
-void VulkanDebugger::checkIfExtensionIsAvailable(const std::vector<const char*>& extensions,
-                                                 const std::vector<const char*>& layers)
+void VulkanDebugger::checkIfExtensionIsAvailable(const std::vector<const char*>& extensions, const std::vector<const char*>& layers)
 {
-  auto extensionIt = std::ranges::find_if(
-      extensions, [](const char* str) { return std::strcmp(str, VK_EXT_DEBUG_UTILS_EXTENSION_NAME) == 0; });
+  auto extensionIt = std::ranges::find_if(extensions, [](const char* str) {  //
+    return std::strcmp(str, VK_EXT_DEBUG_UTILS_EXTENSION_NAME) == 0;
+  });
 
-  auto layerIt = std::ranges::find_if(
-      layers, [](const char* str) { return std::strcmp(str, "VK_LAYER_KHRONOS_validation") == 0; });
+  auto layerIt = std::ranges::find_if(layers, [](const char* str) {  //
+    return std::strcmp(str, "VK_LAYER_KHRONOS_validation") == 0;
+  });
 
   if (extensionIt == extensions.end() || layerIt == layers.end()) {
     throw std::runtime_error("Vulkan debuging extension is off");

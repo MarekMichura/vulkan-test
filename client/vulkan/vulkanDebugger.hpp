@@ -15,19 +15,15 @@ public:
   VulkanDebugger& operator=(const VulkanDebugger&) = delete;
   VulkanDebugger& operator=(VulkanDebugger&&) = delete;
 
-  VulkanDebugger(const VkInstance& instance,
-                 const std::vector<const char*>& extensions,
-                 const std::vector<const char*>& layers);
+  VulkanDebugger(const VkInstance& instance, const std::vector<const char*>& extensions, const std::vector<const char*>& layers);
   ~VulkanDebugger();
 
 private:
   const VkInstance _instance;                      // NOLINT(misc-misplaced-const)
   const VkDebugUtilsMessengerEXT _debugMessenger;  // NOLINT(misc-misplaced-const)
 
-  static void checkIfExtensionIsAvailable(const std::vector<const char*>& extensions,
-                                          const std::vector<const char*>& layers);
-  VkDebugUtilsMessengerEXT createDebugMessenger(const std::vector<const char*>& extensions,
-                                                const std::vector<const char*>& layers);
+  static void checkIfExtensionIsAvailable(const std::vector<const char*>& extensions, const std::vector<const char*>& layers);
+  VkDebugUtilsMessengerEXT createDebugMessenger(const std::vector<const char*>& extensions, const std::vector<const char*>& layers);
   static VKAPI_ATTR uint32_t VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
                                                       VkDebugUtilsMessageTypeFlagsEXT messageType,
                                                       const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,

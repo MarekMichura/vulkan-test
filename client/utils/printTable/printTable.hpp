@@ -83,9 +83,7 @@ std::string printTable::table(std::span<T> ele, char floor)
 }
 
 template <typename T>
-void printTable::print(const std::string_view tableName,
-                       const std::vector<T>& rows,
-                       const std::vector<TableColumn<T>>& columns)
+void printTable::print(const std::string_view tableName, const std::vector<T>& rows, const std::vector<TableColumn<T>>& columns)
 {
   assert(!columns.empty());
   assert(!rows.empty());
