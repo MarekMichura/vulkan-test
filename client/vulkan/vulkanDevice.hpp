@@ -10,13 +10,6 @@
 
 namespace vul {
 class VulkanDevice {
-private:
-  struct DeviceData {
-    VkPhysicalDevice device;
-    VkPhysicalDeviceProperties properties;
-    VkPhysicalDeviceFeatures features;
-  };
-
 public:
   VulkanDevice(const VulkanDevice&) = delete;
   VulkanDevice(VulkanDevice&&) = delete;
@@ -27,6 +20,12 @@ public:
   ~VulkanDevice() = default;
 
 private:
+  struct DeviceData {
+    VkPhysicalDevice device;
+    VkPhysicalDeviceProperties properties;
+    VkPhysicalDeviceFeatures features;
+  };
+
   const VkInstance _instance;              // NOLINT(misc-misplaced-const)
   const VkPhysicalDevice _physicalDevice;  // NOLINT(misc-misplaced-const)
 
@@ -35,6 +34,8 @@ private:
 
   static std::vector<DeviceData> getDeviceData(const std::vector<VkPhysicalDevice>& devices);
   static std::string getDeviceTypeName(VkPhysicalDeviceType type);
+  static DeviceData getBestDevice(const std::vector<DeviceData>& devicesData);
+  static void debugInfo(const std::vector<DeviceData>& devicesData);
 
   using PropertiesT = std::tuple<std::string_view, std::function<std::string(const VulkanDevice::DeviceData&)>>;
   static const std::array<PropertiesT, 172> deviceProperty;

@@ -7,6 +7,7 @@
 #include <format>
 #include <iostream>
 #include <stdexcept>
+#include <string>
 #include <vector>
 
 #include <vulkan/vk_platform.h>
@@ -22,8 +23,7 @@ VulkanDebugger::VulkanDebugger(const VkInstance& instance,
 
 VulkanDebugger::~VulkanDebugger()
 {
-  // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
-  auto func = reinterpret_cast<PFN_vkDestroyDebugUtilsMessengerEXT>(  // NOLINT
+  auto func = reinterpret_cast<PFN_vkDestroyDebugUtilsMessengerEXT>(  // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
       vkGetInstanceProcAddr(_instance, "vkDestroyDebugUtilsMessengerEXT"));
   if (func == nullptr) {
     std::cerr << "debug messenger was not destroyed!, vkDestroyDebugUtilsMessengerEXT not found!";
@@ -56,24 +56,28 @@ VkDebugUtilsMessengerEXT VulkanDebugger::createDebugMessenger(const std::vector<
       .sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT,
       .pNext = nullptr,
       .flags = 0,
-      .messageSeverity = static_cast<uint32_t>(VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT) |
-                         static_cast<uint32_t>(VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT) |
-                         static_cast<uint32_t>(VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT),
-      .messageType = static_cast<uint32_t>(VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT) |
-                     static_cast<uint32_t>(VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT) |
-                     static_cast<uint32_t>(VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT),
+      .messageSeverity =  //
+      static_cast<uint32_t>(VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT) |
+      static_cast<uint32_t>(VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT) |
+      static_cast<uint32_t>(VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT),
+      .messageType =  //
+      static_cast<uint32_t>(VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT) |
+      static_cast<uint32_t>(VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT) |
+      static_cast<uint32_t>(VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT),
       .pfnUserCallback = debugCallback,
       .pUserData = nullptr,
   };
 
   VkDebugUtilsMessengerEXT debugMessenger{};
-  // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
-  auto func = reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>(  // NOLINT
+
+  auto func = reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>(  // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
       vkGetInstanceProcAddr(_instance, "vkCreateDebugUtilsMessengerEXT"));
-  if (func == nullptr || func(_instance, &debugCreateInfo, nullptr, &debugMessenger) != VK_SUCCESS) {
+  if (func == nullptr) {
     throw std::runtime_error("failed to set up debug messenger!");
   }
-
+  if (const VkResult status = func(_instance, &debugCreateInfo, nullptr, &debugMessenger); status != VK_SUCCESS) {
+    throw std::runtime_error(std::format("failed to set up debug messenger! status: {}", std::to_string(status)));
+  }
   return debugMessenger;
 }
 

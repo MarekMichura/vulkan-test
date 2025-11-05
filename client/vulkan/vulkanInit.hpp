@@ -4,7 +4,7 @@
 #include <cstdint>
 #include <memory>
 #include <optional>
-#include <string>
+#include <string_view>
 #include <vector>
 
 #include <vulkan/vulkan_core.h>
@@ -14,10 +14,9 @@
 
 namespace vul {
 class VulkanInit {
-private:
   struct VulkanDef {
-    const std::string& appName = "appName";
-    const std::string& engineName = "engineName";
+    const std::string_view appName = "appName";
+    const std::string_view engineName = "engineName";
 
     uint32_t appVersion = VK_MAKE_VERSION(1, 0, 0);
     uint32_t engineVersion = VK_MAKE_VERSION(1, 0, 0);

@@ -29,9 +29,9 @@ public:
   template <typename T>
   struct TableColumn {
     std::string_view header;
-    std::function<std::string(const T&)> toString;
     std::optional<size_t> width = std::nullopt;
     std::optional<Align> align = std::nullopt;
+    std::function<std::string(const T&)> toString;
   };
 
 private:
@@ -109,7 +109,7 @@ void printTable::print(const std::string_view tableName, const std::vector<T>& r
       preparedColumns, (preparedColumns.size() * 3) + 1,
       [](size_t sum, const PreparedColumnT<T>& column) { return sum + column.columnWidth; });
 
-  std::println("\n{:=^{}}", std::format(" {} ", tableName), fullWidth);
+  std::println("{:=^{}}", std::format(" {} ", tableName), fullWidth);
   for (const PreparedColumnT<T>& column : preparedColumns) {
     std::print("| {:^{}} ", column.column.header, column.columnWidth);
   }

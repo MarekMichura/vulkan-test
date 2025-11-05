@@ -1,6 +1,7 @@
 #include "vulkanInit.hpp"
 
 #include <algorithm>
+#include <cassert>
 #include <cstdint>
 #include <format>
 #include <memory>
@@ -28,6 +29,9 @@ VulkanInit::VulkanInit(const VulkanDef& def)
 
 VkInstance VulkanInit::createInstance(const VulkanDef& def)
 {
+  assert(*def.appName.end() == '\0');
+  assert(*def.engineName.end() == '\0');
+
   const std::vector<VkExtensionProperties> availableExtensions = getAllAvailableExtensions();
   const std::vector<const char*> extensions = combineExtensionsWithGlfwExtensions(def.extensions);
   const std::vector<VkLayerProperties> availableLayers = getAllAvailableLayers();
@@ -35,12 +39,15 @@ VkInstance VulkanInit::createInstance(const VulkanDef& def)
   checkExtensions(extensions, availableExtensions);
   checkLayers(def.layers, availableLayers);
 
+  const auto* applicationName = def.appName.data();
+  const auto* engineName = def.engineName.data();
+
   const VkApplicationInfo appInfo{
       .sType = VK_STRUCTURE_TYPE_APPLICATION_INFO,
       .pNext = nullptr,
-      .pApplicationName = def.appName.data(),
+      .pApplicationName = applicationName,
       .applicationVersion = def.appVersion,
-      .pEngineName = def.engineName.data(),
+      .pEngineName = engineName,
       .engineVersion = def.engineVersion,
       .apiVersion = VK_API_VERSION_1_3,
   };
@@ -57,8 +64,8 @@ VkInstance VulkanInit::createInstance(const VulkanDef& def)
   };
 
   VkInstance instance = nullptr;
-  if (vkCreateInstance(&instanceInfo, nullptr, &instance) != VK_SUCCESS) {
-    throw std::runtime_error("can not create vulkan instance");
+  if (const VkResult status = vkCreateInstance(&instanceInfo, nullptr, &instance); status != VK_SUCCESS) {
+    throw std::runtime_error(std::format("can not create vulkan instance. status: {}", std::to_string(status)));
   }
 
   return instance;
@@ -87,14 +94,12 @@ std::vector<const char*> VulkanInit::combineExtensionsWithGlfwExtensions(const s
 std::vector<VkExtensionProperties> VulkanInit::getAllAvailableExtensions()
 {
   uint32_t count = 0;
-  VkResult result = vkEnumerateInstanceExtensionProperties(nullptr, &count, nullptr);
-  if (result != VK_SUCCESS) {
+  if (const VkResult result = vkEnumerateInstanceExtensionProperties(nullptr, &count, nullptr); result != VK_SUCCESS) {
     throw std::runtime_error(std::format("Failed to get vulkan available extensions: {}", std::to_string(result)));
   }
 
   std::vector<VkExtensionProperties> extensions(count);
-  result = vkEnumerateInstanceExtensionProperties(nullptr, &count, extensions.data());
-  if (result != VK_SUCCESS) {
+  if (const VkResult result = vkEnumerateInstanceExtensionProperties(nullptr, &count, extensions.data()); result != VK_SUCCESS) {
     throw std::runtime_error(std::format("Failed to get vulkan available extensions: {}", std::to_string(result)));
   }
 
@@ -112,14 +117,12 @@ std::vector<VkExtensionProperties> VulkanInit::getAllAvailableExtensions()
 std::vector<VkLayerProperties> VulkanInit::getAllAvailableLayers()
 {
   uint32_t count = 0;
-  VkResult result = vkEnumerateInstanceLayerProperties(&count, nullptr);
-  if (result != VK_SUCCESS) {
+  if (const VkResult result = vkEnumerateInstanceLayerProperties(&count, nullptr); result != VK_SUCCESS) {
     throw std::runtime_error(std::format("Failed to get vulkan available layers: {}", std::to_string(result)));
   }
 
   std::vector<VkLayerProperties> layers(count);
-  result = vkEnumerateInstanceLayerProperties(&count, layers.data());
-  if (result != VK_SUCCESS) {
+  if (const VkResult result = vkEnumerateInstanceLayerProperties(&count, layers.data()); result != VK_SUCCESS) {
     throw std::runtime_error(std::format("Failed to get vulkan available layers: {}", std::to_string(result)));
   }
 

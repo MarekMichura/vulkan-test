@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
+#include <format>
 #include <ranges>
 #include <stdexcept>
 #include <string>
@@ -39,74 +40,26 @@ std::string VulkanDevice::deviceType(const VkPhysicalDeviceType type)
 
 VkPhysicalDevice VulkanDevice::selectPhysicalDevices()
 {
-  std::vector<DeviceData> devicesData = getDeviceData(getPhysicalDevices());
+  const std::vector<DeviceData> devicesData = getDeviceData(getPhysicalDevices());
 
 #ifdef DEBUG
-  using printInfo = std::tuple<std::string, std::vector<std::string>>;
-  std::vector<printInfo> deviceData;
-  deviceData.reserve(deviceProperty.size());
-
-  for (const PropertiesT& prop : deviceProperty) {
-    std::vector<std::string> values;
-    values.reserve(devicesData.size());
-    for (const DeviceData& dev : devicesData) {
-      values.push_back(std::get<1>(prop)(dev));
-    }
-    deviceData.emplace_back(std::get<0>(prop), std::move(values));
-  }
-
-  std::vector<printTable::TableColumn<printInfo>> columns = {
-      {.header = "Var name", .toString = [](const printInfo& ele) { return std::get<0>(ele); }, .align = printTable::Align::left}};
-
-  for (size_t i = 0; i < devicesData.size(); i++) {
-    columns.push_back({.header = std::string_view(static_cast<const char*>(devicesData.at(i).properties.deviceName)),
-                       .toString = [i](const printInfo& ele) { return std::get<1>(ele).at(i); },
-                       .align = printTable::Align::left});
-  }
-
-  printTable::print("Device data", deviceData, columns);
+  debugInfo(devicesData);
 #endif
 
-  auto rateType = [](const VkPhysicalDeviceProperties& data) -> int {
-    switch (data.deviceType) {
-    case VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU:
-      return 3;
-    case VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU:
-      return 2;
-    case VK_PHYSICAL_DEVICE_TYPE_CPU:
-      return 1;
-    default:
-      return 0;
-    }
-  };
-
-  const int bestDeviceType = std::ranges::max(std::views::transform(devicesData, [rateType](const DeviceData& ele) {  //
-    return rateType(ele.properties);
-  }));
-
-  auto bestDeviceTypeDevices = std::views::filter(
-      devicesData, [bestDeviceType, rateType](const DeviceData& ele) { return rateType(ele.properties) == bestDeviceType; });
-
-  const DeviceData bestDevice = *std::ranges::max_element(bestDeviceTypeDevices, [](const DeviceData& first, const DeviceData& second) {
-    return first.properties.limits.maxImageDimension2D < second.properties.limits.maxImageDimension2D;
-  });
-
-  return bestDevice.device;
+  return getBestDevice(devicesData).device;
 }
 
 std::vector<VkPhysicalDevice> VulkanDevice::getPhysicalDevices()
 {
   uint32_t deviceCount = 0;
-  VkResult status = vkEnumeratePhysicalDevices(_instance, &deviceCount, nullptr);
-  if (deviceCount == 0 || status != VK_SUCCESS) {
-    throw std::runtime_error("No GPUs with Vulkan support found!");
+  if (const VkResult status = vkEnumeratePhysicalDevices(_instance, &deviceCount, nullptr); deviceCount == 0 || status != VK_SUCCESS) {
+    throw std::runtime_error(std::format("No GPUs with Vulkan support found! status: {}", std::to_string(status)));
   }
 
   std::vector<VkPhysicalDevice> devices;
   devices.resize(deviceCount);
-  status = vkEnumeratePhysicalDevices(_instance, &deviceCount, devices.data());
-  if (status != VK_SUCCESS) {
-    throw std::runtime_error("Failed to get GPUs!");
+  if (const VkResult status = vkEnumeratePhysicalDevices(_instance, &deviceCount, devices.data()); status != VK_SUCCESS) {
+    throw std::runtime_error(std::format("Failed to get GPUs! status: {}", std::to_string(status)));
   }
 
   return devices;
@@ -128,6 +81,68 @@ std::vector<VulkanDevice::DeviceData> VulkanDevice::getDeviceData(const std::vec
   }
 
   return deviceData;
+}
+
+void VulkanDevice::debugInfo(const std::vector<DeviceData>& devicesData)
+{
+  using printInfo = std::tuple<std::string, std::vector<std::string>>;
+  std::vector<printInfo> deviceData;
+  deviceData.reserve(deviceProperty.size());
+
+  for (const PropertiesT& prop : deviceProperty) {
+    std::vector<std::string> values;
+    values.reserve(devicesData.size());
+    for (const DeviceData& dev : devicesData) {
+      values.push_back(std::get<1>(prop)(dev));
+    }
+    deviceData.emplace_back(std::get<0>(prop), std::move(values));
+  }
+
+  std::vector<printTable::TableColumn<printInfo>> columns = {{
+      .header = "Var name",
+      .align = printTable::Align::left,
+      .toString = [](const printInfo& ele) { return std::get<0>(ele); },
+  }};
+
+  for (size_t i = 0; i < devicesData.size(); i++) {
+    columns.push_back({
+        .header = std::string_view(static_cast<const char*>(devicesData.at(i).properties.deviceName)),
+        .align = printTable::Align::left,
+        .toString = [i](const printInfo& ele) { return std::get<1>(ele).at(i); },
+    });
+  }
+
+  printTable::print("Device data", deviceData, columns);
+}
+
+VulkanDevice::DeviceData VulkanDevice::getBestDevice(const std::vector<DeviceData>& devicesData)
+{
+  auto rateType = [](const VkPhysicalDeviceProperties& data) -> int {
+    switch (data.deviceType) {
+    case VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU:
+      return 3;
+    case VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU:
+      return 2;
+    case VK_PHYSICAL_DEVICE_TYPE_CPU:
+      return 1;
+    default:
+      return 0;
+    }
+  };
+
+  const int bestDeviceType = std::ranges::max(std::views::transform(devicesData, [&rateType](const DeviceData& ele) {  //
+    return rateType(ele.properties);
+  }));
+
+  auto bestDeviceTypeDevices = std::views::filter(devicesData, [bestDeviceType, &rateType](const DeviceData& ele) {  //
+    return rateType(ele.properties) == bestDeviceType;
+  });
+
+  const DeviceData bestDevice = *std::ranges::max_element(bestDeviceTypeDevices, [](const DeviceData& first, const DeviceData& second) {
+    return first.properties.limits.maxImageDimension2D < second.properties.limits.maxImageDimension2D;
+  });
+
+  return bestDevice;
 }
 
 }  // namespace vul

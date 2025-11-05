@@ -1,7 +1,7 @@
 #ifndef APP_HPP
 #define APP_HPP
 
-#include <string>
+#include <string_view>
 
 #include "glfwInit.hpp"
 #include "vulkanInit.hpp"
@@ -10,16 +10,16 @@
 namespace vul {
 class App {
 public:
-  static constexpr int width = 800;
-  static constexpr int height = 600;
-  constexpr static const std::string title = "Vulkan App";
+  constexpr static int width = 800;
+  constexpr static int height = 600;
+  constexpr static const std::string_view title = "Vulkan App";
 
   void run();
 
 private:
-  vul::GlfwInit _glfw;
-  vul::VulkanInit _vulkan{{.appName = title, .engineName = title}};
-  vul::Window _window{{.width = width, .height = height, .title = title}};
+  GlfwInit _glfw;
+  VulkanInit _vulkan{{.appName = title, .engineName = title}};
+  Window _window{{.width = width, .height = height, .title = title}};
 };
 }  // namespace vul
 
