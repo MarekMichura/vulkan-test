@@ -1,5 +1,12 @@
-cmake_minimum_required(VERSION 3.20)
+﻿cmake_minimum_required(VERSION 3.20)
 project("Vulkan" "CXX")
+
+if(POLICY CMP0141)
+  cmake_policy(SET CMP0141 NEW)
+  set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<IF:$<AND:$<C_COMPILER_ID:MSVC>,$<CXX_COMPILER_ID:MSVC>>,$<$<CONFIG:Debug,RelWithDebInfo>:EditAndContinue>,$<$<CONFIG:Debug,RelWithDebInfo>:ProgramDatabase>>")
+endif()
+
+set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE ON)
 
 # ----------------------------
 # 1. Compiler flags
@@ -88,8 +95,14 @@ else()
 endif()
 
 # ----------------------------
-# 2. FetchContent - library
+# 2. FetchContent and packages
 # ----------------------------
+
+if(WIN32)
+  find_package(TBB CONFIG REQUIRED)
+else()
+  find_package(TBB REQUIRED)
+endif()
 
 include(FetchContent)
 set(FETCHCONTENT_UPDATES_DISCONNECTED TRUE)
@@ -102,20 +115,13 @@ FetchContent_MakeAvailable(glfw)
 
 FetchContent_Declare(
   vulkan_headers
-  GIT_TAG master
+  GIT_TAG v1.4.331
   GIT_REPOSITORY https://github.com/KhronosGroup/Vulkan-Headers.git)
 FetchContent_MakeAvailable(vulkan_headers)
 
 FetchContent_Declare(
-  vulkan_headers
-  GIT_TAG master
-  GIT_REPOSITORY https://github.com/KhronosGroup/Vulkan-Headers.git
-)
-FetchContent_MakeAvailable(vulkan_headers)
-
-FetchContent_Declare(
   volk
-  GIT_TAG master
+  GIT_TAG 1.4.304
   GIT_REPOSITORY https://github.com/zeux/volk.git)
 FetchContent_MakeAvailable(volk)
 target_include_directories(volk PRIVATE ${vulkan_headers_SOURCE_DIR}/include)
@@ -141,9 +147,17 @@ endif()
 # ----------------------------
 # 4. Clang-tidy
 # ----------------------------
-
 if(TIDY)
-  set(CLANG_TIDY_CHECKS "*, -llvmlibc-*, -llvm-header-guard, -fuchsia-default-arguments-calls, -modernize-use-trailing-return-type, -altera-unroll-loops")
+  set(CLANG_TIDY_CHECKS_LIST
+    "*"
+    "-llvmlibc-*"
+    "-llvm-header-guard"
+    "-fuchsia-default-arguments-calls"
+    "-modernize-use-trailing-return-type"
+    "-altera-unroll-loops"
+    "-misc-use-anonymous-namespace"
+  )
+  string(JOIN "," CLANG_TIDY_CHECKS ${CLANG_TIDY_CHECKS_LIST})
   set(CLANG_TIDY_OPTIONS "-config={\"CheckOptions\":[{\"key\":\"readability-identifier-length.IgnoredVariableNames\",\"value\":\"id|it\"}]}")
   set(CMAKE_CXX_CLANG_TIDY
     "clang-tidy"
@@ -156,4 +170,6 @@ endif()
 # 5. Add subdir
 # ----------------------------
 
+add_subdirectory("lib/utils")
+add_subdirectory("lib/vulkan")
 add_subdirectory("client")

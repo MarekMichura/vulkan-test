@@ -1,19 +1,7 @@
-#include <cstdlib>
-#include <exception>
-#include <iostream>
-
-#include "app.hpp"
+﻿#include "api/api.hpp"
 
 int main()
 {
-  try {
-    vul::App app;
-    app.run();
-  }
-  catch (const std::exception& e) {
-    std::cerr << e.what() << "\n";
-    return EXIT_FAILURE;
-  }
-
-  return EXIT_SUCCESS;
+  auto api = vulkan::VulkanApi::createApi();
+  return 0;
 }
