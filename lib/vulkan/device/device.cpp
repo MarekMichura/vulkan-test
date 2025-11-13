@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <format>
 #include <functional>
+#include <memory>
 #include <optional>
 #include <ranges>
 #include <span>
@@ -17,11 +18,13 @@
 
 #include <vulkan/vulkan_core.h>
 
+#include "available/available.hpp"
 #include "debug.hpp"
 #include "device_data.hpp"
 #include "format/string.hpp"
 #include "format/table.hpp"
 #include "init_vulkan/init.hpp"
+#include "window/window_info.hpp"
 
 namespace vulkan {
 struct PrintData {  // NOLINT(altera-struct-pack-align)
@@ -397,7 +400,7 @@ static std::vector<DeviceData> getDevicesData(const VkSurfaceKHR& surface)
       VkBool32 supportKHR = VK_FALSE;
       vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface, &supportKHR);
 
-      queuesData.emplace_back(queues[i], supportKHR);
+      queuesData.emplace_back(queues[i], supportKHR, i);
     }
 
     devicesData.emplace_back(device, properties, features, memProperties, std::move(queuesData));
@@ -498,8 +501,148 @@ static bool compare(const DeviceData& deviceA, const DeviceData& deviceB)
   return queueScoreA < queueScoreB;
 }
 
-VulkanDevice::VulkanDevice(const VkSurfaceKHR& surface)
+static std::vector<VkExtensionProperties> getDeviceExtensions(VkPhysicalDevice device, const std::vector<std::string>& check)
+{
+  static const auto compare = [](std::string_view name, const VkExtensionProperties& ext) {
+    return std::string_view(static_cast<const char*>(ext.extensionName)) == name;
+  };
+
+  uint32_t count = 0;
+  vkEnumerateDeviceExtensionProperties(device, nullptr, &count, nullptr);
+  std::vector<VkExtensionProperties> extensions(count);
+  vkEnumerateDeviceExtensionProperties(device, nullptr, &count, extensions.data());
+
+  if (!utils::checkPresent(check, extensions, compare)) {
+    throw std::runtime_error("Device does not support required extensions");
+  }
+
+  return extensions;
+}
+
+static std::vector<VkLayerProperties> getDeviceLayers(VkPhysicalDevice device, const std::vector<std::string>& check)
+{
+  static const auto compare = [](std::string_view name, const VkLayerProperties& ext) {  //
+    return std::string_view(static_cast<const char*>(ext.layerName)) == name;
+  };
+
+  uint32_t count = 0;
+  vkEnumerateDeviceLayerProperties(device, &count, nullptr);
+  std::vector<VkLayerProperties> layers(count);
+  vkEnumerateDeviceLayerProperties(device, &count, layers.data());
+
+  if (!utils::checkPresent(check, layers, compare)) {
+    throw std::runtime_error("Device does not support required layers");
+  }
+
+  return layers;
+}
+
+[[maybe_unused]]
+static void showDeviceInfo(std::string_view name,
+                           const std::vector<VkExtensionProperties>& extensions,
+                           const std::vector<VkLayerProperties>& layers)
+{
+  auto extensionName = std::format("Available extensions for: {}", name);
+  auto layerName = std::format("Available layers for: {}", name);
+  // clang-format off
+  utils::table<VkExtensionProperties>(extensionName, extensions, std::vector<utils::TableColumn<VkExtensionProperties>>{{
+    {.title = "layerName", .align = utils::Align::left, 
+      .toString = [](const VkExtensionProperties& ele) { return std::string(static_cast<const char *>(ele.extensionName)); }},
+    {.title = "spec ver", .toString = [](const VkExtensionProperties& ele) { return utils::version(ele.specVersion); }}}});
+
+  utils::table<VkLayerProperties>(layerName, layers, std::vector<utils::TableColumn<VkLayerProperties>>{{
+    {.title = "layerName",   .align = utils::Align::left, .toString = [](const VkLayerProperties& ele) { 
+      return std::string(static_cast<const char*>(ele.layerName)); }},
+    {.title = "description", .align = utils::Align::left, .toString = [](const VkLayerProperties& ele) { return std::string(static_cast<const char*>(ele.description)); }},
+    {.title = "implementation ver", .toString = [](const VkLayerProperties& ele) { 
+      return utils::version(ele.implementationVersion); }},
+    {.title = "spec ver", .toString = [](const VkLayerProperties& ele) { return utils::version(ele.specVersion); }}}});
+  // clang-format on
+}
+
+static uint32_t getBestGraphicsQueue(std::vector<DeviceDataQueue> queues)
+{
+  auto it = std::ranges::max_element(queues, [](const DeviceDataQueue& queueA, const DeviceDataQueue& queueB) {
+    auto aCount = (queueA.supportKHR && (queueA.properties.queueFlags & VK_QUEUE_GRAPHICS_BIT) != 0) ? queueA.properties.queueCount : 0;
+    auto bCount = (queueB.supportKHR && (queueB.properties.queueFlags & VK_QUEUE_GRAPHICS_BIT) != 0) ? queueB.properties.queueCount : 0;
+    return aCount < bCount;
+  });
+  if (it == queues.end()) {
+    throw std::runtime_error("No graphics queue found");
+  }
+  return it->queueIndex;
+}
+
+static VkDevice createLogicalDevice(const WindowInfo& info, const VkSurfaceKHR& surface, uint32_t& index)
 {
   auto bestDevice = std::ranges::max(getDevicesData(surface) | std::views::filter(checkMinimalRequirements), compare);
+  auto [id, properties, features, memory, queues] = bestDevice;
+
+  auto extensions = info.extensions |                                                            //
+                    std::views::transform([](const std::string& str) { return str.c_str(); }) |  //
+                    std::ranges::to<std::vector<const char*>>();
+  auto layers = info.layers |                                                                //
+                std::views::transform([](const std::string& str) { return str.c_str(); }) |  //
+                std::ranges::to<std::vector<const char*>>();
+
+  auto availableExtensions = getDeviceExtensions(id, info.extensions);
+  auto availableLayers = getDeviceLayers(id, info.layers);
+  index = getBestGraphicsQueue(queues);
+
+  if constexpr (Debug) {
+    showDeviceInfo(static_cast<const char*>(properties.deviceName), availableExtensions, availableLayers);
+  }
+
+  const float priority = 1.0F;
+  auto queueInfo = VkDeviceQueueCreateInfo{
+      .sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
+      .pNext = nullptr,
+      .flags = 0,
+      .queueFamilyIndex = index,
+      .queueCount = 1,
+      .pQueuePriorities = &priority,
+  };
+
+  const VkPhysicalDeviceFeatures deviceFeatures{};
+
+  const VkDeviceCreateInfo createInfo{
+      .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
+      .pNext = nullptr,
+      .flags = 0,
+      .queueCreateInfoCount = 1,
+      .pQueueCreateInfos = &queueInfo,
+      .enabledLayerCount = static_cast<uint32_t>(layers.size()),
+      .ppEnabledLayerNames = layers.data(),
+      .enabledExtensionCount = static_cast<uint32_t>(extensions.size()),
+      .ppEnabledExtensionNames = extensions.data(),
+      .pEnabledFeatures = &deviceFeatures,
+  };
+
+  VkDevice logicalDevice = {};
+  if (const VkResult status = vkCreateDevice(id, &createInfo, nullptr, &logicalDevice); status != VK_SUCCESS) {
+    throw std::runtime_error(std::format("failed to create logical device! status: {}", utils::result(status)));
+  }
+
+  return logicalDevice;
+}
+
+static void deleteLogicalDevice(VkDevice device)
+{
+  vkDestroyDevice(device, nullptr);
+}
+
+static VkQueue getGraphicsQueue(VkDevice device, uint32_t index)
+{
+  VkQueue graphicsQueue = nullptr;
+  vkGetDeviceQueue(device, index, 0, &graphicsQueue);
+
+  return graphicsQueue;
+}
+
+VulkanDevice::VulkanDevice(const WindowInfo& info, const VkSurfaceKHR& surface)
+    : _graphicsQueueIndex(0),
+      _device(createLogicalDevice(info, surface, _graphicsQueueIndex), deleteLogicalDevice),
+      _graphicsQueue(getGraphicsQueue(_device.get(), _graphicsQueueIndex))
+{
 }
 }  // namespace vulkan

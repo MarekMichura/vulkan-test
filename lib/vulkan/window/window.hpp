@@ -28,7 +28,7 @@ public:
 private:
   std::unique_ptr<GLFWwindow, void (*)(GLFWwindow*)> _window;
   std::unique_ptr<VkSurfaceKHR_T, SurfaceDeleter> _surface;
-  std::unique_ptr<VulkanDevice> _device;
+  VulkanDevice _device;
 };
 }  // namespace vulkan
 

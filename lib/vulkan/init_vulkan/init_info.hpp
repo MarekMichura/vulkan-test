@@ -1,8 +1,7 @@
 #ifndef LIB_VULKAN_INIT_VULKAN_INITINFO
 #define LIB_VULKAN_INIT_VULKAN_INITINFO
 
-#include <iostream>
-#include <string_view>
+#include <string>
 #include <vector>
 
 #include <vulkan/vulkan_core.h>
@@ -11,19 +10,19 @@
 
 namespace vulkan {
 struct VulkanInfo {
-  const std::string_view appName = "";
-  const std::string_view engineName = "";
+  const std::string appName = "";
+  const std::string engineName = "";
 
   const uint32_t appVersion = VK_MAKE_VERSION(1, 0, 1);
   const uint32_t engineVersion = VK_MAKE_VERSION(1, 0, 0);
 
-  const bool useDebugger = DEBUG;
-  const std::vector<std::string_view> layers = {
+  const bool useDebugger = Debug;
+  const std::vector<std::string> layers = {
 #ifdef DEBUG
       "VK_LAYER_KHRONOS_validation"
 #endif
   };
-  const std::vector<std::string_view> extensions = {
+  const std::vector<std::string> extensions = {
 #ifdef DEBUG
       VK_EXT_DEBUG_UTILS_EXTENSION_NAME
 #endif

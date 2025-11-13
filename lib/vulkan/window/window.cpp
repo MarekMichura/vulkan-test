@@ -46,7 +46,7 @@ static VkSurfaceKHR createSurface(GLFWwindow* window)
 Window::Window(const WindowInfo& info)
     : _window(createWindow(info), destroyWindow),  //
       _surface(createSurface(_window.get()), SurfaceDeleter{}),
-      _device(std::make_unique<VulkanDevice>(_surface.get()))
+      _device(info, _surface.get())
 {
 }
 

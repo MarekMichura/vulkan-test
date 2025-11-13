@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <format>
+#include <iterator>
 #include <memory>
 #include <ranges>
 #include <span>
@@ -20,7 +21,7 @@
 #include "init_info.hpp"
 
 namespace vulkan {
-static std::vector<std::string_view> getGlfwExtensions()
+static std::vector<std::string> getGlfwExtensions()
 {
   uint32_t count = 0;
   auto* glfwExtensions = glfwGetRequiredInstanceExtensions(&count);
@@ -28,7 +29,7 @@ static std::vector<std::string_view> getGlfwExtensions()
     throw std::runtime_error("GLFW: Failed to get extensions");
   }
 
-  return std::span(glfwExtensions, count) | std::ranges::to<std::vector<std::string_view>>();
+  return std::span(glfwExtensions, count) | std::ranges::to<std::vector<std::string>>();
 }
 
 static std::vector<VkExtensionProperties> getAvailableExtensions()
@@ -53,14 +54,14 @@ static std::vector<VkExtensionProperties> getAvailableExtensions()
   return extensions;
 }
 
-static std::vector<std::string_view> prepareExtensions(const VulkanInfo& def)
+static std::vector<std::string> prepareExtensions(const VulkanInfo& def)
 {
   static const auto compare = [](std::string_view name, const VkExtensionProperties& ext) {
     return std::string_view(static_cast<const char*>(ext.extensionName)) == name;
   };
 
   const std::vector<VkExtensionProperties> availableExtensions = getAvailableExtensions();
-  const std::vector<std::string_view> glfwExtensions = getGlfwExtensions();
+  const std::vector<std::string> glfwExtensions = getGlfwExtensions();
 
   if (!utils::checkPresent(glfwExtensions, availableExtensions, compare)) {
     throw std::runtime_error("GLFW requires an extension that is not available");
@@ -70,11 +71,11 @@ static std::vector<std::string_view> prepareExtensions(const VulkanInfo& def)
     throw std::runtime_error("One or more requested extensions are not available");
   }
 
-  std::vector<std::string_view> result;
+  std::vector<std::string> result;
   result.reserve(glfwExtensions.size() + def.extensions.size());
 
-  result.insert(result.end(), glfwExtensions.begin(), glfwExtensions.end());
-  result.insert(result.end(), def.extensions.begin(), def.extensions.end());
+  result.insert(result.end(), std::make_move_iterator(glfwExtensions.begin()), std::make_move_iterator(glfwExtensions.end()));
+  result.insert(result.end(), std::make_move_iterator(def.extensions.begin()), std::make_move_iterator(def.extensions.end()));
 
   return result;
 }
@@ -105,7 +106,7 @@ static std::vector<VkLayerProperties> getAvailableLayers()
   return layers;
 }
 
-static std::vector<std::string_view> prepareLayers(const VulkanInfo& def)
+static std::vector<std::string> prepareLayers(const VulkanInfo& def)
 {
   static const auto compare = [](std::string_view name, const VkLayerProperties& ext) {  //
     return std::string_view(static_cast<const char*>(ext.layerName)) == name;
@@ -124,21 +125,21 @@ static VkInstance createInstance(const VulkanInfo& def)
   auto extensions = prepareExtensions(def);
   auto layers = prepareLayers(def);
 
-  auto extensionsTable = extensions |                                                              //
-                         std::views::transform([](std::string_view str) { return str.data(); }) |  //
+  auto extensionsTable = extensions |                                                                 //
+                         std::views::transform([](const std::string& str) { return str.c_str(); }) |  //
                          std::ranges::to<std::vector<const char*>>();
-  auto layersTable = layers |                                                                  //
-                     std::views::transform([](std::string_view str) { return str.data(); }) |  //
+  auto layersTable = layers |                                                                     //
+                     std::views::transform([](const std::string& str) { return str.c_str(); }) |  //
                      std::ranges::to<std::vector<const char*>>();
 
   const VkApplicationInfo appInfo{
       .sType = VK_STRUCTURE_TYPE_APPLICATION_INFO,
       .pNext = nullptr,
-      .pApplicationName = def.appName.data(),  // NOLINT(bugprone-suspicious-stringview-data-usage)
+      .pApplicationName = def.appName.data(),
       .applicationVersion = def.appVersion,
-      .pEngineName = def.engineName.data(),  // NOLINT(bugprone-suspicious-stringview-data-usage)
+      .pEngineName = def.engineName.data(),
       .engineVersion = def.engineVersion,
-      .apiVersion = VK_API_VERSION_1_3,
+      .apiVersion = VK_API_VERSION_1_0,
   };
 
   const VkInstanceCreateInfo instanceInfo{

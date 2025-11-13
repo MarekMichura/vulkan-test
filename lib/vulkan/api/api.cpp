@@ -22,8 +22,8 @@ static std::vector<Window> createWindows(const VulkanApiInfo& info)
   windows.reserve(info.windowsInfo.size() + 1);
 
   windows.emplace_back(info.mainWindowInfo);
-  for (const auto& info : info.windowsInfo) {
-    windows.emplace_back(info);
+  for (const auto& windowInfo : info.windowsInfo) {
+    windows.emplace_back(windowInfo);
   }
 
   return windows;

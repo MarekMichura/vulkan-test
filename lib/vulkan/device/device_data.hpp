@@ -1,6 +1,7 @@
 #ifndef LIB_VULKAN_DEVICE_DEVICE_DATA
 #define LIB_VULKAN_DEVICE_DEVICE_DATA
 
+#include <cstdint>
 #include <vector>
 
 #include <vulkan/vulkan_core.h>
@@ -9,6 +10,7 @@ namespace vulkan {
 struct DeviceDataQueue {
   VkQueueFamilyProperties properties;
   VkBool32 supportKHR;
+  uint32_t queueIndex;
 };
 
 struct DeviceData {
