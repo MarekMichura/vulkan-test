@@ -386,16 +386,16 @@ static std::vector<DeviceData> getDevicesData(const VkSurfaceKHR& surface)
     VkPhysicalDeviceFeatures features;
     vkGetPhysicalDeviceFeatures(device, &features);
 
-    uint32_t count = 0;
-    vkGetPhysicalDeviceQueueFamilyProperties(device, &count, nullptr);
-    std::vector<VkQueueFamilyProperties> queues(count);
-    vkGetPhysicalDeviceQueueFamilyProperties(device, &count, queues.data());
+    uint32_t queueCount = 0;
+    vkGetPhysicalDeviceQueueFamilyProperties(device, &queueCount, nullptr);
+    std::vector<VkQueueFamilyProperties> queues(queueCount);
+    vkGetPhysicalDeviceQueueFamilyProperties(device, &queueCount, queues.data());
 
     VkPhysicalDeviceMemoryProperties memProperties;
     vkGetPhysicalDeviceMemoryProperties(device, &memProperties);
 
     std::vector<DeviceDataQueue> queuesData;
-    queuesData.reserve(count);
+    queuesData.reserve(queueCount);
     for (uint32_t i = 0; i < queues.size(); ++i) {  // NOLINT(altera-id-dependent-backward-branch)
       VkBool32 supportKHR = VK_FALSE;
       vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface, &supportKHR);

@@ -60,15 +60,15 @@ void table(std::string_view tableName, Rows&& rows, Columns&& columns)
 
     preparedColumns.emplace_back(column.title, columnWidth, column.align.value_or(Align::center), std::move(data));
   }
-  size_t width = std::transform_reduce(  //
+  size_t totalWidth = std::transform_reduce(  //
       std::execution::seq, preparedColumns.begin(), preparedColumns.end(), size_t(columns.size() * 3 + 1), std::plus<>(),
       [](const PreparedColumnT& ele) -> size_t { return ele.columnWidth; });
 
-  std::println("\n{}{:=^{}}", boldText, std::format(" {} ", tableName), width);
+  std::println("\n{}{:=^{}}", boldText, std::format(" {} ", tableName), totalWidth);
   for (const PreparedColumnT& column : preparedColumns) {
     std::print("| {:^{}} ", column.title, column.columnWidth);
   }
-  std::println("|\n{:=^{}}{}", "", width, normalText);
+  std::println("|\n{:=^{}}{}", "", totalWidth, normalText);
   for (size_t i = 0; i < rows.size(); ++i) {
     for (const PreparedColumnT& column : preparedColumns) {
       auto& [data, length] = column.data.at(i);
@@ -88,7 +88,7 @@ void table(std::string_view tableName, Rows&& rows, Columns&& columns)
     }
     std::println("{}|{}", boldText, normalText);
   }
-  std::println("{}{:=^{}}{}\n", boldText, "", width, normalText);
+  std::println("{}{:=^{}}{}\n", boldText, "", totalWidth, normalText);
 }
 }  // namespace utils
 
