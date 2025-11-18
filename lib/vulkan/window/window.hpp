@@ -7,7 +7,7 @@
 #include <vulkan/vulkan_core.h>
 
 #include "device/device.hpp"
-#include "surface_deleter.hpp"
+#include "surface/surface.hpp"
 #include "window_info.hpp"
 
 namespace vulkan {
@@ -27,9 +27,10 @@ public:
 
 private:
   std::unique_ptr<GLFWwindow, void (*)(GLFWwindow*)> _window;
-  std::unique_ptr<VkSurfaceKHR_T, SurfaceDeleter> _surface;
+  Surface _surface;
   VulkanDevice _device;
 };
+
 }  // namespace vulkan
 
 #endif /* LIB_VULKAN_WINDOW_WINDOW */

@@ -1,11 +1,11 @@
 #ifndef LIB_VULKAN_DEVICE_DEVICE
 #define LIB_VULKAN_DEVICE_DEVICE
 
-#include <cstdint>
 #include <memory>
 
 #include <vulkan/vulkan_core.h>
 
+#include "queue.hpp"
 #include "window/window_info.hpp"
 
 namespace vulkan {
@@ -20,9 +20,8 @@ public:
   ~VulkanDevice() = default;
 
 private:
-  uint32_t _graphicsQueueIndex;
   std::unique_ptr<VkDevice_T, void (*)(VkDevice)> _device;
-  VkQueue _graphicsQueue;
+  std::unique_ptr<Queue> _queue = nullptr;
 };
 }  // namespace vulkan
 

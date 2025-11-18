@@ -20,6 +20,7 @@
 
 #include "available/available.hpp"
 #include "debug.hpp"
+#include "device/queue.hpp"
 #include "device_data.hpp"
 #include "format/string.hpp"
 #include "format/table.hpp"
@@ -560,24 +561,9 @@ static void showDeviceInfo(std::string_view name,
   // clang-format on
 }
 
-static uint32_t getBestGraphicsQueue(std::vector<DeviceDataQueue> queues)
+static VkDevice createLogicalDevice(const WindowInfo& info, const DeviceData& bestDevice)
 {
-  auto it = std::ranges::max_element(queues, [](const DeviceDataQueue& queueA, const DeviceDataQueue& queueB) {
-    auto aCount = (queueA.supportKHR && (queueA.properties.queueFlags & VK_QUEUE_GRAPHICS_BIT) != 0) ? queueA.properties.queueCount : 0;
-    auto bCount = (queueB.supportKHR && (queueB.properties.queueFlags & VK_QUEUE_GRAPHICS_BIT) != 0) ? queueB.properties.queueCount : 0;
-    return aCount < bCount;
-  });
-  if (it == queues.end()) {
-    throw std::runtime_error("No graphics queue found");
-  }
-  return it->queueIndex;
-}
-
-static VkDevice createLogicalDevice(const WindowInfo& info, const VkSurfaceKHR& surface, uint32_t& index)
-{
-  auto bestDevice = std::ranges::max(getDevicesData(surface) | std::views::filter(checkMinimalRequirements), compare);
-  auto [id, properties, features, memory, queues] = bestDevice;
-
+  auto [device, properties, features, memory, queues] = bestDevice;
   auto extensions = info.extensions |                                                            //
                     std::views::transform([](const std::string& str) { return str.c_str(); }) |  //
                     std::ranges::to<std::vector<const char*>>();
@@ -585,32 +571,46 @@ static VkDevice createLogicalDevice(const WindowInfo& info, const VkSurfaceKHR& 
                 std::views::transform([](const std::string& str) { return str.c_str(); }) |  //
                 std::ranges::to<std::vector<const char*>>();
 
-  auto availableExtensions = getDeviceExtensions(id, info.extensions);
-  auto availableLayers = getDeviceLayers(id, info.layers);
-  index = getBestGraphicsQueue(queues);
+  auto availableExtensions = getDeviceExtensions(device, info.extensions);
+  auto availableLayers = getDeviceLayers(device, info.layers);
 
   if constexpr (Debug) {
     showDeviceInfo(static_cast<const char*>(properties.deviceName), availableExtensions, availableLayers);
   }
+  std::vector<VkDeviceQueueCreateInfo> queuesInfo;
+  std::vector<std::vector<float>> priorities;
+  queuesInfo.reserve(queues.size());
+  priorities.reserve(queues.size());
 
-  const float priority = 1.0F;
-  auto queueInfo = VkDeviceQueueCreateInfo{
-      .sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
-      .pNext = nullptr,
-      .flags = 0,
-      .queueFamilyIndex = index,
-      .queueCount = 1,
-      .pQueuePriorities = &priority,
-  };
+  for (const auto& queue : queues) {
+    const size_t count = queue.properties.queueCount;
+    if (count > 1) {
+      priorities.push_back(                                                                                                 //
+          std::views::iota(0UL, count) |                                                                                    //
+          std::views::transform([count](size_t seq) { return static_cast<float>(seq) / static_cast<float>(count - 1); }) |  //
+          std::ranges::to<std::vector>());
+    }
+    else {
+      priorities.push_back({1});
+    }
+
+    queuesInfo.emplace_back(VkDeviceQueueCreateInfo{
+        .sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
+        .pNext = nullptr,
+        .flags = 0,
+        .queueFamilyIndex = static_cast<uint32_t>(queue.queueIndex),
+        .queueCount = static_cast<uint32_t>(count),
+        .pQueuePriorities = priorities.back().data(),
+    });
+  }
 
   const VkPhysicalDeviceFeatures deviceFeatures{};
-
   const VkDeviceCreateInfo createInfo{
       .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
       .pNext = nullptr,
       .flags = 0,
-      .queueCreateInfoCount = 1,
-      .pQueueCreateInfos = &queueInfo,
+      .queueCreateInfoCount = static_cast<uint32_t>(queuesInfo.size()),
+      .pQueueCreateInfos = queuesInfo.data(),
       .enabledLayerCount = static_cast<uint32_t>(layers.size()),
       .ppEnabledLayerNames = layers.data(),
       .enabledExtensionCount = static_cast<uint32_t>(extensions.size()),
@@ -619,7 +619,7 @@ static VkDevice createLogicalDevice(const WindowInfo& info, const VkSurfaceKHR& 
   };
 
   VkDevice logicalDevice = {};
-  if (const VkResult status = vkCreateDevice(id, &createInfo, nullptr, &logicalDevice); status != VK_SUCCESS) {
+  if (const VkResult status = vkCreateDevice(device, &createInfo, nullptr, &logicalDevice); status != VK_SUCCESS) {
     throw std::runtime_error(std::format("failed to create logical device! status: {}", utils::result(status)));
   }
 
@@ -631,18 +631,11 @@ static void deleteLogicalDevice(VkDevice device)
   vkDestroyDevice(device, nullptr);
 }
 
-static VkQueue getGraphicsQueue(VkDevice device, uint32_t index)
+VulkanDevice::VulkanDevice(const WindowInfo& info, const VkSurfaceKHR& surface) : _device(nullptr, deleteLogicalDevice)
 {
-  VkQueue graphicsQueue = nullptr;
-  vkGetDeviceQueue(device, index, 0, &graphicsQueue);
+  auto bestDevice = std::ranges::max(getDevicesData(surface) | std::views::filter(checkMinimalRequirements), compare);
 
-  return graphicsQueue;
-}
-
-VulkanDevice::VulkanDevice(const WindowInfo& info, const VkSurfaceKHR& surface)
-    : _graphicsQueueIndex(0),
-      _device(createLogicalDevice(info, surface, _graphicsQueueIndex), deleteLogicalDevice),
-      _graphicsQueue(getGraphicsQueue(_device.get(), _graphicsQueueIndex))
-{
+  _device.reset(createLogicalDevice(info, bestDevice));
+  _queue = std::make_unique<Queue>(_device.get(), bestDevice.queues);
 }
 }  // namespace vulkan
