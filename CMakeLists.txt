@@ -16,7 +16,7 @@ if(MSVC)
   set(COMMON_FLAGS
     /W4 # Sets warning level to 4, which is very strict.
     /Wall # Enables all warnings.
-    /WX # Treats all warnings as errors, stopping compilation.
+    # /WX # Treats all warnings as errors, stopping compilation.
     /permissive- # Enforces stricter standard C++ conformance.
     /EHsc # Specifies the exception-handling model for C++ code.
   )
@@ -115,14 +115,15 @@ endforeach()
 # 3. FetchContent and packages
 # ----------------------------
 
-if(WIN32)
-  find_package(TBB CONFIG REQUIRED)
-else()
-  find_package(TBB REQUIRED)
-endif()
-
 include(FetchContent)
 set(FETCHCONTENT_UPDATES_DISCONNECTED TRUE)
+
+FetchContent_Declare(
+  tbb
+  GIT_REPOSITORY https://github.com/oneapi-src/oneTBB.git
+  GIT_TAG v2022.3.0
+)
+FetchContent_MakeAvailable(tbb)
 
 FetchContent_Declare(
   glfw
@@ -198,8 +199,15 @@ add_subdirectory("lib/utils")
 add_subdirectory("lib/vulkan")
 add_subdirectory("client")
 
-add_custom_target(copy_commands ALL
-  COMMAND ${CMAKE_COMMAND} -E copy_if_different
-  ${CMAKE_BINARY_DIR}/compile_commands.json
-  ${CMAKE_SOURCE_DIR}/build/compile_commands.json
-)
+# ----------------------------
+# 6. Move 
+# ----------------------------
+
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(CMAKE_COMPILE_COMMANDS_OUTPUT_DIR "${CMAKE_SOURCE_DIR}/build/")
+
+#add_custom_target(copy_commands ALL
+#  COMMAND ${CMAKE_COMMAND} -E copy_if_different
+#  ${CMAKE_BINARY_DIR}/compile_commands.json
+#  ${CMAKE_SOURCE_DIR}/build/compile_commands.json
+#)

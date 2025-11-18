@@ -8,6 +8,7 @@
 #include <cstdint>
 #include <cstring>
 #include <execution>
+#include <filesystem>
 #include <format>
 #include <fstream>
 #include <functional>
@@ -16,25 +17,18 @@
 #include <optional>
 #include <ostream>
 #include <print>
+#include <sstream>
 #include <string_view>
 #include <vector>
 
+#include "ansi.hpp"
 #include "debug.hpp"
 #include "format/ansi.hpp"
 
 namespace utils {
 enum class Align : std::uint8_t { left, right, center };
 
-static std::ostream& getStream()
-{
-  if constexpr (PrintTable) {
-    return std::cout;
-  }
-  else {
-    static std::ofstream file("table.log", std::ios::trunc);
-    return file;
-  }
-}
+void print(std::string str);
 
 template <typename T>
 struct TableColumn {
@@ -51,7 +45,6 @@ void table(std::string_view tableName, const Rows& rows, const Columns& columns)
 {
   assert(!rows.empty());
   assert(!columns.empty());
-  std::ostream& print = getStream();
   static constexpr auto boldText = ansi<{.bold = true}>();
   static constexpr auto normalText = ansi();
   struct PreparedColumnT {
@@ -81,11 +74,12 @@ void table(std::string_view tableName, const Rows& rows, const Columns& columns)
       std::execution::seq, preparedColumns.begin(), preparedColumns.end(), size_t((columns.size() * 3) + 1), std::plus<>(),
       [](const PreparedColumnT& ele) -> size_t { return ele.columnWidth; });
 
-  std::println(print, "\n{}{:=^{}}", boldText, std::format(" {} ", tableName), totalWidth);
+  std::ostringstream builder;
+  builder << std::format("\n{}{:=^{}}\n", boldText, std::format(" {} ", tableName), totalWidth);
   for (const PreparedColumnT& column : preparedColumns) {
-    std::print(print, "| {:^{}} ", column.title, column.columnWidth);
+    builder << std::format("| {:^{}} ", column.title, column.columnWidth);
   }
-  std::println(print, "|\n{:=^{}}{}", "", totalWidth, normalText);
+  builder << std::format("|\n{:=^{}}{}\n", "", totalWidth, normalText);
   for (size_t i = 0; i < rows.size(); ++i) {
     for (const PreparedColumnT& column : preparedColumns) {
       auto& [data, length] = column.data.at(i);
@@ -93,19 +87,20 @@ void table(std::string_view tableName, const Rows& rows, const Columns& columns)
 
       switch (column.align) {
       case Align::left:
-        std::print(print, "{}|{} {:<{}} ", boldText, normalText, data, width);
+        builder << std::format("{}|{} {:<{}} ", boldText, normalText, data, width);
         break;
       case Align::right:
-        std::print(print, "{}|{} {:>{}} ", boldText, normalText, data, width);
+        builder << std::format("{}|{} {:>{}} ", boldText, normalText, data, width);
         break;
       case Align::center:
-        std::print(print, "{}|{} {:^{}} ", boldText, normalText, data, width);
+        builder << std::format("{}|{} {:^{}} ", boldText, normalText, data, width);
         break;
       }
     }
-    std::println(print, "{}|{}", boldText, normalText);
+    builder << std::format("{}|{}\n", boldText, normalText);
   }
-  std::println(print, "{}{:=^{}}{}\n", boldText, "", totalWidth, normalText);
+  builder << std::format("{}{:=^{}}{}\n", boldText, "", totalWidth, normalText);
+  print(builder.str());
 }
 }  // namespace utils
 
