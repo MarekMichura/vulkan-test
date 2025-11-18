@@ -6,8 +6,6 @@
 
 #include <vulkan/vulkan_core.h>
 
-#include "debug.hpp"
-
 namespace vulkan {
 struct VulkanInfo {
   std::string appName;
@@ -16,7 +14,6 @@ struct VulkanInfo {
   uint32_t appVersion = VK_MAKE_VERSION(1, 0, 1);
   uint32_t engineVersion = VK_MAKE_VERSION(1, 0, 0);
 
-  bool useDebugger = Debug;
   std::vector<std::string> layers = {
 #ifdef DEBUG
       "VK_LAYER_KHRONOS_validation"

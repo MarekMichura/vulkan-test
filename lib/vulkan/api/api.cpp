@@ -2,9 +2,7 @@
 
 #include <cassert>
 #include <memory>
-#include <optional>
 #include <stdexcept>
-#include <utility>
 #include <vector>
 
 #include "api_info.hpp"
@@ -29,18 +27,17 @@ static std::vector<Window> createWindows(const VulkanApiInfo& info)
   return windows;
 }
 
-static std::optional<VulkanDebugger> createDebugger(const VulkanInfo& info)
+static VulkanDebugger createDebugger(const VulkanInfo& info)
 {
-  if (!info.useDebugger) {
-    return std::nullopt;
-  }
-  return std::optional<VulkanDebugger>(std::in_place, info);
+  return VulkanDebugger(info);
 }
 
-VulkanApi::VulkanApi(const VulkanApiInfo& info)              //
-    : _glfw(InitGlfw::createInit()),                         //
-      _vulkan(InitVulkan::createInit(info.vulkanInitInfo)),  //
+VulkanApi::VulkanApi(const VulkanApiInfo& info)
+    : _glfw(InitGlfw::createInit()),
+      _vulkan(InitVulkan::createInit(info.vulkanInitInfo)),
+#ifdef DEBUG
       _debugger(createDebugger(info.vulkanInitInfo)),
+#endif
       _windows(createWindows(info))
 {
 }

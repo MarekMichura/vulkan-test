@@ -18,6 +18,7 @@ public:
   VulkanApi(VulkanApi&&) = delete;
   VulkanApi& operator=(const VulkanApi&) = delete;
   VulkanApi& operator=(VulkanApi&&) = delete;
+
   ~VulkanApi() = default;
 
   static std::shared_ptr<VulkanApi> createApi(const VulkanApiInfo& info = {});
@@ -26,7 +27,9 @@ public:
 private:
   const std::shared_ptr<InitGlfw> _glfw;
   const std::shared_ptr<InitVulkan> _vulkan;
-  std::optional<VulkanDebugger> _debugger;
+#ifdef DEBUG
+  VulkanDebugger _debugger;
+#endif
   std::vector<Window> _windows;
 
   explicit VulkanApi(const VulkanApiInfo& info = {});
