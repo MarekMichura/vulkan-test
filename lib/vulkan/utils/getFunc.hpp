@@ -15,13 +15,13 @@ T getFunc()
   auto instance = InitVulkan::getInit();
   if constexpr (std::is_same_v<T, PFN_vkCreateDebugUtilsMessengerEXT>) {
     if (auto func = vkGetInstanceProcAddr(instance->getInstance(), "vkCreateDebugUtilsMessengerEXT"); func != nullptr) {
-      return reinterpret_cast<T>(func);
+      return reinterpret_cast<T>(func);  // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
     }
     throw std::runtime_error("Failed to load vkCreateDebugUtilsMessengerEXT function");
   }
   else if constexpr (std::is_same_v<T, PFN_vkDestroyDebugUtilsMessengerEXT>) {
     if (auto func = vkGetInstanceProcAddr(instance->getInstance(), "vkDestroyDebugUtilsMessengerEXT"); func != nullptr) {
-      return reinterpret_cast<T>(func);
+      return reinterpret_cast<T>(func);  // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
     }
     throw std::runtime_error("Failed to load vkDestroyDebugUtilsMessengerEXT function");
   }

@@ -16,7 +16,7 @@ public:
   InitVulkan& operator=(InitVulkan&&) = delete;
 
   ~InitVulkan() = default;
-  VkInstance getInstance() const;
+  [[nodiscard]] VkInstance getInstance() const;
 
   static std::shared_ptr<InitVulkan> createInit(const VulkanInfo& info = {});
   static std::shared_ptr<InitVulkan> getInit();
@@ -24,7 +24,7 @@ public:
 private:
   std::unique_ptr<VkInstance_T, void (*)(VkInstance)> _instance;
 
-  InitVulkan(const VulkanInfo& def);
+  explicit InitVulkan(const VulkanInfo& def);
 
   static std::weak_ptr<InitVulkan>& ptr();
 };

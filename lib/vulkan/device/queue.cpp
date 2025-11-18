@@ -3,8 +3,8 @@
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
-#include <cstdio>
 #include <ranges>
+#include <utility>
 #include <vector>
 
 #include <vulkan/vulkan_core.h>
@@ -28,11 +28,14 @@ static std::vector<std::vector<VkQueue>> createQueues(VkDevice device, const std
   return result;
 }
 
-static void generateQueueData(const std::vector<DeviceDataQueue>& queues,
-                              std::vector<uint32_t>& graphics,
-                              std::vector<uint32_t>& compute,
-                              std::vector<uint32_t>& transfer,
-                              std::vector<uint32_t>& sparse)
+struct GenerateQueueData_T {
+  std::vector<uint32_t> graphics;
+  std::vector<uint32_t> compute;
+  std::vector<uint32_t> transfer;
+  std::vector<uint32_t> sparse;
+};
+
+static GenerateQueueData_T generateQueueData(const std::vector<DeviceDataQueue>& queues)
 {
   static auto getGraphics = [](const DeviceDataQueue& queue) {
     return (queue.properties.queueFlags & VK_QUEUE_GRAPHICS_BIT) != 0 && queue.supportKHR;
@@ -68,15 +71,20 @@ static void generateQueueData(const std::vector<DeviceDataQueue>& queues,
   std::ranges::sort(dataTransfer, sort);
   std::ranges::sort(dataSparse, sort);
 
-  graphics = dataGraphics | std::views::transform(transform) | std::ranges::to<std::vector>();
-  compute = dataCompute | std::views::transform(transform) | std::ranges::to<std::vector>();
-  transfer = dataTransfer | std::views::transform(transform) | std::ranges::to<std::vector>();
-  sparse = dataSparse | std::views::transform(transform) | std::ranges::to<std::vector>();
+  return {.graphics = dataGraphics | std::views::transform(transform) | std::ranges::to<std::vector>(),
+          .compute = dataCompute | std::views::transform(transform) | std::ranges::to<std::vector>(),
+          .transfer = dataTransfer | std::views::transform(transform) | std::ranges::to<std::vector>(),
+          .sparse = dataSparse | std::views::transform(transform) | std::ranges::to<std::vector>()};
 }
 
-Queue::Queue(VkDevice device, std::vector<DeviceDataQueue> queues)  //
+Queue::Queue(VkDevice device, const std::vector<DeviceDataQueue>& queues)  //
     : _queues(createQueues(device, queues))
 {
-  generateQueueData(queues, _graphics, _compute, _transfer, _sparse);
+  auto queueData = generateQueueData(queues);
+
+  _graphics = std::move(queueData.graphics);
+  _compute = std::move(queueData.compute);
+  _transfer = std::move(queueData.transfer);
+  _sparse = std::move(queueData.sparse);
 }
 }  // namespace vulkan

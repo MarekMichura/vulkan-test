@@ -29,7 +29,7 @@ private:
   std::optional<VulkanDebugger> _debugger;
   std::vector<Window> _windows;
 
-  VulkanApi(const VulkanApiInfo& info = {});
+  explicit VulkanApi(const VulkanApiInfo& info = {});
 
   static std::weak_ptr<VulkanApi>& ptr();
 };

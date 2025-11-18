@@ -14,7 +14,7 @@ public:
   Queue& operator=(const Queue&) = delete;
   Queue& operator=(Queue&&) = default;
 
-  explicit Queue(VkDevice device, std::vector<DeviceDataQueue> queues);
+  explicit Queue(VkDevice device, const std::vector<DeviceDataQueue>& queues);
   ~Queue() = default;
 
 private:

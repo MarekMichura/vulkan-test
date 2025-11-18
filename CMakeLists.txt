@@ -150,13 +150,20 @@ if(TIDY)
     "*"
     "-llvmlibc-*"
     "-llvm-header-guard"
+    "-fuchsia-overloaded-operator"
     "-fuchsia-default-arguments-calls"
+    "-fuchsia-default-arguments-declarations"
     "-modernize-use-trailing-return-type"
     "-altera-unroll-loops"
+    "-altera-struct-pack-align"
     "-misc-use-anonymous-namespace"
   )
   string(JOIN "," CLANG_TIDY_CHECKS ${CLANG_TIDY_CHECKS_LIST})
-  set(CLANG_TIDY_OPTIONS "-config={\"CheckOptions\":[{\"key\":\"readability-identifier-length.IgnoredVariableNames\",\"value\":\"id|it\"}]}")
+  set(CLANG_TIDY_OPTIONS
+    "-config={\"CheckOptions\":[{\"key\":\"readability-identifier-length.IgnoredVariableNames\",\"value\":\"id|it|i|j\"}]}"
+    "-header-filter=lib/.*|client/.*"
+    "--extra-arg=-Wno-unknown-warning-option"
+  )
   set(CMAKE_CXX_CLANG_TIDY
     "clang-tidy"
     "-checks=${CLANG_TIDY_CHECKS}"

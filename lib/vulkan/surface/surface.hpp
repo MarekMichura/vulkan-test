@@ -16,10 +16,10 @@ public:
   Surface& operator=(const Surface&) = delete;
   Surface& operator=(Surface&&) = default;
 
-  Surface(GLFWwindow* window);
+  explicit Surface(GLFWwindow* window);
   ~Surface() = default;
 
-  VkSurfaceKHR get() const;
+  [[nodiscard]] VkSurfaceKHR get() const;
 
 private:
   std::unique_ptr<VkSurfaceKHR_T, SurfaceDeleter> _surface;

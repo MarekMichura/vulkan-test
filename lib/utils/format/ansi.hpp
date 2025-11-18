@@ -3,12 +3,13 @@
 
 #include <array>
 #include <cstddef>
+#include <cstdint>
 #include <string_view>
 
 namespace utils {
-size_t strLen(const std::string_view str);
+size_t strLen(std::string_view str);
 
-enum class COLOR {
+enum class COLOR : std::int8_t {
   NONE = -1,
   DEFAULT = 39,
   BLACK = 30,
@@ -28,7 +29,7 @@ enum class COLOR {
   BRIGHT_CYAN = 96,
   BRIGHT_WHITE = 97,
 };
-enum class BACKGROUND {
+enum class BACKGROUND : std::int8_t {
   NONE = -1,
   DEFAULT = 49,
   BLACK = 40,
@@ -64,9 +65,8 @@ struct AnsiData {
   BACKGROUND background = BACKGROUND::NONE;
 };
 
-namespace {
 template <typename T>
-consteval std::string_view code(T data)
+static consteval std::string_view code(T data)
 {
   if constexpr (std::is_same_v<T, COLOR>) {
     // clang-format off
@@ -117,10 +117,9 @@ consteval std::string_view code(T data)
     // clang-format on
   }
 }
-}  // namespace
 
-template <AnsiData data>
-consteval std::string_view ansi()
+template <AnsiData data = {}>
+consteval std::string_view ansi()  // NOLINT(readability-function-cognitive-complexity)
 {
   constexpr std::string_view color = code(data.color);
   constexpr std::string_view background = code(data.background);
@@ -134,122 +133,122 @@ consteval std::string_view ansi()
   constexpr std::string_view hidden = data.hidden ? "8" : "";
   constexpr std::string_view strike = data.strike ? "9" : "";
 
-  constexpr size_t elements = (color.empty() ? 0u : 1u) +          //
-                              (background.empty() ? 0u : 1u) +     //
-                              (bold.empty() ? 0u : 1u) +           //
-                              (dark.empty() ? 0u : 1u) +           //
-                              (italic.empty() ? 0u : 1u) +         //
-                              (underline.empty() ? 0u : 1u) +      //
-                              (blinking_slow.empty() ? 0u : 1u) +  //
-                              (blinking_fast.empty() ? 0u : 1u) +  //
-                              (negative.empty() ? 0u : 1u) +       //
-                              (hidden.empty() ? 0u : 1u) +         //
-                              (strike.empty() ? 0u : 1u);          //
+  constexpr size_t elements = (color.empty() ? 0U : 1U) +          //
+                              (background.empty() ? 0U : 1U) +     //
+                              (bold.empty() ? 0U : 1U) +           //
+                              (dark.empty() ? 0U : 1U) +           //
+                              (italic.empty() ? 0U : 1U) +         //
+                              (underline.empty() ? 0U : 1U) +      //
+                              (blinking_slow.empty() ? 0U : 1U) +  //
+                              (blinking_fast.empty() ? 0U : 1U) +  //
+                              (negative.empty() ? 0U : 1U) +       //
+                              (hidden.empty() ? 0U : 1U) +         //
+                              (strike.empty() ? 0U : 1U);          //
   constexpr size_t length = color.length() + background.length() + bold.length() + italic.length() + underline.length() +
                             blinking_slow.length() + blinking_fast.length() + negative.length() + hidden.length() + strike.length() +
                             elements + 3;
 
   if constexpr (elements == 0) {
-    return std::string_view("\033[0m");
+    return {"\033[0m"};
   }
 
-  static constexpr auto buf = [&]() {
+  static constexpr auto buf = [&]() {  // NOLINT(readability-function-cognitive-complexity)
     size_t pos = 0;
     std::array<char, length> result{};
-    result[pos++] = '\033';
-    result[pos++] = '[';
+    result.at(pos++) = '\033';
+    result.at(pos++) = '[';
 
     if constexpr (!color.empty()) {
       if (pos > 2) {
-        result[pos++] = ';';
+        result.at(pos++) = ';';
       }
-      for (auto c : color) {
-        result[pos++] = c;
+      for (auto token : color) {
+        result.at(pos++) = token;
       }
     }
     if constexpr (!background.empty()) {
       if (pos > 2) {
-        result[pos++] = ';';
+        result.at(pos++) = ';';
       }
-      for (auto c : background) {
-        result[pos++] = c;
+      for (auto token : background) {
+        result.at(pos++) = token;
       }
     }
 
     if constexpr (data.bold) {
       if (pos > 2) {
-        result[pos++] = ';';
+        result.at(pos++) = ';';
       }
-      for (auto c : bold) {
-        result[pos++] = c;
+      for (auto token : bold) {
+        result.at(pos++) = token;
       }
     }
     if constexpr (data.dark) {
       if (pos > 2) {
-        result[pos++] = ';';
+        result.at(pos++) = ';';
       }
-      for (auto c : dark) {
-        result[pos++] = c;
+      for (auto token : dark) {
+        result.at(pos++) = token;
       }
     }
     if constexpr (data.italic) {
       if (pos > 2) {
-        result[pos++] = ';';
+        result.at(pos++) = ';';
       }
-      for (auto c : italic) {
-        result[pos++] = c;
+      for (auto token : italic) {
+        result.at(pos++) = token;
       }
     }
     if constexpr (data.underline) {
       if (pos > 2) {
-        result[pos++] = ';';
+        result.at(pos++) = ';';
       }
-      for (auto c : underline) {
-        result[pos++] = c;
+      for (auto token : underline) {
+        result.at(pos++) = token;
       }
     }
     if constexpr (data.blinking_slow) {
       if (pos > 2) {
-        result[pos++] = ';';
+        result.at(pos++) = ';';
       }
-      for (auto c : blinking_slow) {
-        result[pos++] = c;
+      for (auto token : blinking_slow) {
+        result.at(pos++) = token;
       }
     }
     if constexpr (data.blinking_fast) {
       if (pos > 2) {
-        result[pos++] = ';';
+        result.at(pos++) = ';';
       }
-      for (auto c : blinking_fast) {
-        result[pos++] = c;
+      for (auto token : blinking_fast) {
+        result.at(pos++) = token;
       }
     }
     if constexpr (data.negative) {
       if (pos > 2) {
-        result[pos++] = ';';
+        result.at(pos++) = ';';
       }
-      for (auto c : negative) {
-        result[pos++] = c;
+      for (auto token : negative) {
+        result.at(pos++) = token;
       }
     }
     if constexpr (data.hidden) {
       if (pos > 2) {
-        result[pos++] = ';';
+        result.at(pos++) = ';';
       }
-      for (auto c : hidden) {
-        result[pos++] = c;
+      for (auto token : hidden) {
+        result.at(pos++) = token;
       }
     }
     if constexpr (data.strike) {
       if (pos > 2) {
-        result[pos++] = ';';
+        result.at(pos++) = ';';
       }
-      for (auto c : strike) {
-        result[pos++] = c;
+      for (auto token : strike) {
+        result.at(pos++) = token;
       }
     }
 
-    result[pos++] = 'm';
+    result.at(pos++) = 'm';
     return result;
   }();
 
@@ -257,24 +256,31 @@ consteval std::string_view ansi()
 }
 
 template <AnsiData data, size_t N>
-constexpr auto ansi(const char (&str)[N])
+constexpr auto ansi(const std::array<char, N> str)
 {
   constexpr auto open = ansi<data>();
-  constexpr auto close = ansi<{}>();
+  constexpr auto close = ansi();
 
   std::array<char, open.size() + close.size() + N - 1> result{};
-  size_t i = 0;
+  size_t pos = 0;
 
   for (size_t j = 0; j < open.size() - 1; j++) {
-    result[i++] = open[j];
+    result.at(pos++) = open.at(j);
   }
   for (size_t j = 0; j < N - 1; ++j) {
-    result[i++] = str[j];
+    result.at(pos++) = str.at(j);
   }
-  for (char c : close)
-    result[i++] = c;
+  for (const char token : close) {
+    result.at(pos++) = token;
+  }
 
   return result;
+}
+
+template <AnsiData data, size_t N>
+constexpr auto ansi(const char (&str)[N])  // NOLINT(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
+{
+  return ansi<data>(std::to_array(str));
 }
 
 }  // namespace utils

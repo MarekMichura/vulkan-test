@@ -14,15 +14,15 @@ struct WindowInfo {
 
   int width = defaultWidth;
   int height = defaultHeight;
-  const std::string title = "Vulkan window";
+  std::string title = "Vulkan window";
   int resize = GLFW_FALSE;
 
-  const std::vector<std::string> layers = {
+  std::vector<std::string> layers = {
 #ifdef DEBUG
       "VK_LAYER_KHRONOS_validation"
 #endif
   };
-  const std::vector<std::string> extensions = {};
+  std::vector<std::string> extensions;
 };
 }  // namespace vulkan
 

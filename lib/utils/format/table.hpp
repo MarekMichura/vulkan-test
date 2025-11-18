@@ -31,17 +31,17 @@ struct TableColumn {
 template <typename T, std::ranges::range Rows, std::ranges::range Columns>
   requires std::same_as<std::ranges::range_value_t<Rows>, T> &&  //
            std::same_as<std::ranges::range_value_t<Columns>, TableColumn<T>>
-void table(std::string_view tableName, Rows&& rows, Columns&& columns)
+void table(std::string_view tableName, const Rows& rows, const Columns& columns)
 {
   assert(!rows.empty());
-  assert(columns.size() != 0);
+  assert(!columns.empty());
   static constexpr auto boldText = ansi<{.bold = true}>();
-  static constexpr auto normalText = ansi<{}>();
+  static constexpr auto normalText = ansi();
   struct PreparedColumnT {
     std::string_view title;
-    size_t columnWidth;
-    Align align;
-    std::vector<std::pair<std::string, size_t>> data{};
+    size_t columnWidth = 0;
+    Align align = Align::center;
+    std::vector<std::pair<std::string, size_t>> data;
   };
 
   std::vector<PreparedColumnT> preparedColumns;
@@ -53,15 +53,15 @@ void table(std::string_view tableName, Rows&& rows, Columns&& columns)
 
     for (const T& row : rows) {
       std::string value = column.toString(row);
-      size_t length = utils::strLen(value);
+      const size_t length = utils::strLen(value);
       columnWidth = std::max(columnWidth, length);
-      data.push_back({std::move(value), length});
+      data.emplace_back(std::move(value), length);
     }
 
     preparedColumns.emplace_back(column.title, columnWidth, column.align.value_or(Align::center), std::move(data));
   }
   size_t totalWidth = std::transform_reduce(  //
-      std::execution::seq, preparedColumns.begin(), preparedColumns.end(), size_t(columns.size() * 3 + 1), std::plus<>(),
+      std::execution::seq, preparedColumns.begin(), preparedColumns.end(), size_t((columns.size() * 3) + 1), std::plus<>(),
       [](const PreparedColumnT& ele) -> size_t { return ele.columnWidth; });
 
   std::println("\n{}{:=^{}}", boldText, std::format(" {} ", tableName), totalWidth);

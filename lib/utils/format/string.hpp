@@ -6,7 +6,9 @@
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
+#include <exception>
 #include <format>
+#include <iostream>
 #include <locale>
 #include <ranges>
 #include <string>
@@ -16,7 +18,7 @@
 #include "format/ansi.hpp"
 
 namespace utils {
-std::string deviceType(const VkPhysicalDeviceType type);
+std::string deviceType(VkPhysicalDeviceType type);
 
 std::string string(bool data, bool compact = false);
 
@@ -45,10 +47,10 @@ std::string number(const T ele, const char floor = '_')
   return str;
 }
 
-template <std ::ranges::input_range R>
-std::string table(R&& table, size_t n = 0)
+template <std::ranges::input_range Range>
+std::string table(const Range& table, size_t n = 0)
 {
-  using T = std::ranges::range_value_t<R>;
+  using T = std::ranges::range_value_t<Range>;
   assert(table.size() > 0);
   static constexpr auto separatorA = utils::ansi<{.bold = true, .color = COLOR::RED}>(", ");
   static constexpr auto separatorB = utils::ansi<{.bold = true, .color = COLOR::RED}>("|");
@@ -64,14 +66,21 @@ std::string table(R&& table, size_t n = 0)
       result = number(ele);
     }
     else {
-      result = ele;
+      result = std::move(ele);
     }
-    size_t length = strLen(result);
+    const size_t length = strLen(result);
     if (length <= n) {
-      return std::format(" {:{}s} ", result, n + (result.length() - length));
+      try {
+        return std::format(" {:{}s} ", result, n + (result.length() - length));
+      }
+      catch (const std::format_error& e) {
+        std::cerr << "Weird error with formatter:\n\t" << e.what() << "\n";
+        std::terminate();
+      }
     }
     return result;
   };
+
   auto data = table |                                                                              //
               std::views::transform(toString) |                                                    //
               std::views::join_with(std::string(n > 0 ? separatorB.data() : separatorA.data())) |  //

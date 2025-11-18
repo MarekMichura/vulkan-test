@@ -27,7 +27,7 @@ static VKAPI_ATTR uint32_t VKAPI_CALL debugCallback(  //
     const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
     [[maybe_unused]] void* pUserData)
 {
-  static constexpr auto end = utils::ansi<{}>();
+  static constexpr auto end = utils::ansi();
   auto getMessageType = [](VkDebugUtilsMessageTypeFlagsEXT type) {
     static constexpr auto bold = utils::ansi<{.bold = true, .underline = true}>();
 
@@ -71,7 +71,8 @@ static VKAPI_ATTR uint32_t VKAPI_CALL debugCallback(  //
   };
 
   std::ostream& out = ((messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT) != 0) ? std::cerr : std::cout;
-  out << std::format("  {} {} {}{}{}\n", time(), getMessageType(messageType), getMessageColor(messageSeverity), pCallbackData->pMessage, end);
+  static constexpr std::string_view format = "   {} {} {}{}{}\n";
+  out << std::format(format, time(), getMessageType(messageType), getMessageColor(messageSeverity), pCallbackData->pMessage, end);
   return VK_FALSE;
 }
 

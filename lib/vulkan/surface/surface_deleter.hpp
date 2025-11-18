@@ -9,14 +9,15 @@
 
 namespace vulkan {
 struct SurfaceDeleter {
-  std::shared_ptr<InitVulkan> instance = InitVulkan::getInit();
-
   void operator()(VkSurfaceKHR surface) const
   {
-    if (surface) {
+    if (surface != nullptr) {
       vkDestroySurfaceKHR(instance->getInstance(), surface, nullptr);
     }
   }
+
+private:
+  std::shared_ptr<InitVulkan> instance = InitVulkan::getInit();
 };
 }  // namespace vulkan
 

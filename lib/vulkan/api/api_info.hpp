@@ -10,10 +10,10 @@
 
 namespace vulkan {
 struct VulkanApiInfo {
-  const VulkanInfo vulkanInitInfo = {};
+  VulkanInfo vulkanInitInfo = {};
 
-  const WindowInfo mainWindowInfo = {};
-  const std::vector<WindowInfo> windowsInfo = {};
+  WindowInfo mainWindowInfo = {};
+  std::vector<WindowInfo> windowsInfo;
 };
 }  // namespace vulkan
 

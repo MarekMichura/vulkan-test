@@ -1,5 +1,7 @@
 #ifndef LIB_VULKAN_DEBUGGER_DEBUGGER_DELETER
 #define LIB_VULKAN_DEBUGGER_DEBUGGER_DELETER
+#include <exception>
+#include <iostream>
 #include <memory>
 
 #include <vulkan/vulkan_core.h>
@@ -9,13 +11,24 @@
 
 namespace vulkan {
 struct DebuggerDeleter {
-  std::shared_ptr<InitVulkan> instance = InitVulkan::getInit();
-
   void operator()(VkDebugUtilsMessengerEXT debugger) const
   {
-    auto func = getFunc<PFN_vkDestroyDebugUtilsMessengerEXT>();
-    func(instance->getInstance(), debugger, nullptr);
+    try {
+      auto func = getFunc<PFN_vkDestroyDebugUtilsMessengerEXT>();
+      func(instance->getInstance(), debugger, nullptr);
+    }
+    catch (const std::format_error& e) {
+      std::cerr << "Failed to destroy debugger:\n\t" << e.what() << "\n";
+      std::terminate();
+    }
+    catch (...) {
+      std::cerr << "Unknown error destroying debugger\n";
+      std::terminate();
+    }
   }
+
+private:
+  std::shared_ptr<InitVulkan> instance = InitVulkan::getInit();
 };
 }  // namespace vulkan
 

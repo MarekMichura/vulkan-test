@@ -22,18 +22,19 @@
 #include "debug.hpp"
 #include "device/queue.hpp"
 #include "device_data.hpp"
+#include "format/logtime.hpp"
 #include "format/string.hpp"
 #include "format/table.hpp"
 #include "init_vulkan/init.hpp"
 #include "window/window_info.hpp"
 
 namespace vulkan {
-struct PrintData {  // NOLINT(altera-struct-pack-align)
+struct PrintData {
   std::string_view property;
   std::function<std::string(const DeviceData&)> fun;
 };
 
-struct Print {  // NOLINT(altera-struct-pack-align)
+struct Print {
   std::string_view property;
   std::vector<std::string> data;
 };
@@ -563,6 +564,7 @@ static void showDeviceInfo(std::string_view name,
 
 static VkDevice createLogicalDevice(const WindowInfo& info, const DeviceData& bestDevice)
 {
+  auto time = utils::LogTime("Device construct");
   auto [device, properties, features, memory, queues] = bestDevice;
   auto extensions = info.extensions |                                                            //
                     std::views::transform([](const std::string& str) { return str.c_str(); }) |  //
