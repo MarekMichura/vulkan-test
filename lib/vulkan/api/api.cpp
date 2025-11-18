@@ -27,6 +27,7 @@ static std::vector<Window> createWindows(const VulkanApiInfo& info)
   return windows;
 }
 
+[[maybe_unused]]
 static VulkanDebugger createDebugger(const VulkanInfo& info)
 {
   return VulkanDebugger(info);

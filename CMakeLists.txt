@@ -95,7 +95,24 @@ else()
 endif()
 
 # ----------------------------
-# 2. FetchContent and packages
+# 2. ENABLE FEATURES
+# ----------------------------
+
+set(ASSAN FALSE)
+set(TIDY FALSE)
+set(PRINT_TABLE 0)
+foreach(f IN LISTS FEATURES)
+  if(f STREQUAL "assan")
+    set(ASSAN TRUE)
+  elseif(f STREQUAL "tidy")
+    set(TIDY TRUE)
+  elseif(f STREQUAL "printTable")
+    set(PRINT_TABLE 1)
+  endif()
+endforeach()
+
+# ----------------------------
+# 3. FetchContent and packages
 # ----------------------------
 
 if(WIN32)
@@ -127,7 +144,7 @@ FetchContent_MakeAvailable(volk)
 target_include_directories(volk PRIVATE ${vulkan_headers_SOURCE_DIR}/include)
 
 # ----------------------------
-# 3. Vulkan SDK – system or download
+# 4. Vulkan SDK – system or download
 # ----------------------------
 
 find_package(Vulkan QUIET)
@@ -143,8 +160,9 @@ else()
 endif()
 
 # ----------------------------
-# 4. Clang-tidy
+# 5. Clang-tidy
 # ----------------------------
+
 if(TIDY)
   set(CLANG_TIDY_CHECKS_LIST
     "*"
@@ -173,9 +191,15 @@ if(TIDY)
 endif()
 
 # ----------------------------
-# 5. Add subdir
+# 6. Add subdir
 # ----------------------------
 
 add_subdirectory("lib/utils")
 add_subdirectory("lib/vulkan")
 add_subdirectory("client")
+
+add_custom_target(copy_commands ALL
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different
+  ${CMAKE_BINARY_DIR}/compile_commands.json
+  ${CMAKE_SOURCE_DIR}/build/compile_commands.json
+)

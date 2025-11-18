@@ -12,7 +12,10 @@ file(GLOB_RECURSE PROJECT_SOURCES CONFIGURE_DEPENDS
 target_sources(${PROJECT} PRIVATE ${PROJECT_SOURCES})
 target_compile_features(${PROJECT} PRIVATE cxx_std_23)
 target_compile_options(${PROJECT} PRIVATE ${FLAGS})
-target_compile_definitions(${PROJECT} PRIVATE $<$<CONFIG:Debug>:DEBUG>)
+target_compile_definitions(${PROJECT}
+  PUBLIC PRINT_TABLE=${PRINT_TABLE}
+  PRIVATE $<$<CONFIG:Debug>:DEBUG>
+)
 target_link_libraries(${PROJECT} PUBLIC glfw Vulkan::Vulkan TBB::tbb)
 
 # =============================

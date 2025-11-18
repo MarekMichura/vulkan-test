@@ -1,23 +1,16 @@
-﻿{
-  "buildPresets": [
-    {
-      "name": "default",
-      "configurePreset": "debug",
-      "jobs": 12
-    }
-  ],
+{
+  "version": 3,
   "configurePresets": [
     {
       "name": "windows-base",
       "hidden": true,
       "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build/${presetName}",
-      "installDir": "${sourceDir}/build/install/${presetName}",
+      "binaryDir": "${sourceDir}/build/${presetName}/",
+      "installDir": "${sourceDir}/build/${presetName}/install/",
       "cacheVariables": {
         "CMAKE_C_COMPILER": "cl.exe",
         "CMAKE_CXX_COMPILER": "cl.exe",
-        "ASSAN": false,
-        "TIDY": false
+        "FEATURES": ""
       },
       "condition": {
         "type": "equals",
@@ -26,100 +19,103 @@
       }
     },
     {
-      "name": "x64-debug",
-      "displayName": "x64 Debug",
-      "inherits": "windows-base",
+      "name": "linux-base",
+      "hidden": true,
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/${presetName}/",
+      "installDir": "${sourceDir}/build/${presetName}/install/",
+      "cacheVariables": {
+        "CMAKE_EXPORT_COMPILE_COMMANDS": true,
+        "FEATURES": ""
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      }
+    },
+    {
+      "name": "arch-x64",
+      "hidden": true,
       "architecture": {
         "value": "x64",
         "strategy": "external"
-      },
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug"
       }
     },
     {
-      "name": "x64-release",
-      "displayName": "x64 Release",
-      "inherits": "x64-debug",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release"
-      }
-    },
-    {
-      "name": "x86-debug",
-      "displayName": "x86 Debug",
-      "inherits": "windows-base",
+      "name": "arch-x86",
+      "hidden": true,
       "architecture": {
         "value": "x86",
         "strategy": "external"
-      },
+      }
+    },
+    {
+      "name": "debug-mode",
+      "hidden": true,
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug"
       }
     },
     {
-      "name": "x86-release",
-      "displayName": "x86 Release",
-      "inherits": "x86-debug",
+      "name": "release-mode",
+      "hidden": true,
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release"
       }
     },
     {
       "name": "debug",
-      "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build/",
-      "cacheVariables": {
-        "CMAKE_EXPORT_COMPILE_COMMANDS": true,
-        "CMAKE_BUILD_TYPE": "Debug",
-        "ASSAN": false,
-        "TIDY": false
-      }
-    },
-    {
-      "name": "debug ASSAN",
-      "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build/",
-      "cacheVariables": {
-        "CMAKE_EXPORT_COMPILE_COMMANDS": true,
-        "CMAKE_BUILD_TYPE": "Debug",
-        "ASSAN": true,
-        "TIDY": false
-      }
-    },
-    {
-      "name": "debug TIDY",
-      "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build/",
-      "cacheVariables": {
-        "CMAKE_EXPORT_COMPILE_COMMANDS": true,
-        "CMAKE_BUILD_TYPE": "Debug",
-        "ASSAN": false,
-        "TIDY": true
-      }
-    },
-    {
-      "name": "debug ASSAN TIDY",
-      "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build/",
-      "cacheVariables": {
-        "CMAKE_EXPORT_COMPILE_COMMANDS": true,
-        "CMAKE_BUILD_TYPE": "Debug",
-        "ASSAN": true,
-        "TIDY": true
-      }
+      "inherits": [
+        "linux-base",
+        "debug-mode"
+      ]
     },
     {
       "name": "release",
-      "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build/",
-      "cacheVariables": {
-        "CMAKE_EXPORT_COMPILE_COMMANDS": true,
-        "CMAKE_BUILD_TYPE": "Release",
-        "ASSAN": false,
-        "TIDY": false
-      }
+      "inherits": [
+        "linux-base",
+        "release-mode"
+      ]
+    },
+    {
+      "name": "x64-debug",
+      "inherits": [
+        "windows-base",
+        "arch-x64",
+        "debug-mode"
+      ]
+    },
+    {
+      "name": "x64-release",
+      "inherits": [
+        "windows-base",
+        "arch-x64",
+        "release-mode"
+      ]
+    },
+    {
+      "name": "x86-debug",
+      "inherits": [
+        "windows-base",
+        "arch-x86",
+        "debug-mode"
+      ]
+    },
+    {
+      "name": "x86-release",
+      "inherits": [
+        "windows-base",
+        "arch-x86",
+        "release-mode"
+      ]
     }
   ],
-  "version": 3
+  "buildPresets": [
+    {
+      "name": "default",
+      "configurePreset": "debug",
+      "jobs": 12
+    }
+  ]
 }

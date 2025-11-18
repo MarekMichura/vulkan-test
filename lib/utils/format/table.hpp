@@ -8,17 +8,33 @@
 #include <cstdint>
 #include <cstring>
 #include <execution>
+#include <format>
+#include <fstream>
 #include <functional>
+#include <iostream>
 #include <numeric>
 #include <optional>
+#include <ostream>
 #include <print>
 #include <string_view>
 #include <vector>
 
+#include "debug.hpp"
 #include "format/ansi.hpp"
 
 namespace utils {
 enum class Align : std::uint8_t { left, right, center };
+
+static std::ostream& getStream()
+{
+  if constexpr (PrintTable) {
+    return std::cout;
+  }
+  else {
+    static std::ofstream file("table.log", std::ios::trunc);
+    return file;
+  }
+}
 
 template <typename T>
 struct TableColumn {
@@ -35,6 +51,7 @@ void table(std::string_view tableName, const Rows& rows, const Columns& columns)
 {
   assert(!rows.empty());
   assert(!columns.empty());
+  std::ostream& print = getStream();
   static constexpr auto boldText = ansi<{.bold = true}>();
   static constexpr auto normalText = ansi();
   struct PreparedColumnT {
@@ -64,11 +81,11 @@ void table(std::string_view tableName, const Rows& rows, const Columns& columns)
       std::execution::seq, preparedColumns.begin(), preparedColumns.end(), size_t((columns.size() * 3) + 1), std::plus<>(),
       [](const PreparedColumnT& ele) -> size_t { return ele.columnWidth; });
 
-  std::println("\n{}{:=^{}}", boldText, std::format(" {} ", tableName), totalWidth);
+  std::println(print, "\n{}{:=^{}}", boldText, std::format(" {} ", tableName), totalWidth);
   for (const PreparedColumnT& column : preparedColumns) {
-    std::print("| {:^{}} ", column.title, column.columnWidth);
+    std::print(print, "| {:^{}} ", column.title, column.columnWidth);
   }
-  std::println("|\n{:=^{}}{}", "", totalWidth, normalText);
+  std::println(print, "|\n{:=^{}}{}", "", totalWidth, normalText);
   for (size_t i = 0; i < rows.size(); ++i) {
     for (const PreparedColumnT& column : preparedColumns) {
       auto& [data, length] = column.data.at(i);
@@ -76,19 +93,19 @@ void table(std::string_view tableName, const Rows& rows, const Columns& columns)
 
       switch (column.align) {
       case Align::left:
-        std::print("{}|{} {:<{}} ", boldText, normalText, data, width);
+        std::print(print, "{}|{} {:<{}} ", boldText, normalText, data, width);
         break;
       case Align::right:
-        std::print("{}|{} {:>{}} ", boldText, normalText, data, width);
+        std::print(print, "{}|{} {:>{}} ", boldText, normalText, data, width);
         break;
       case Align::center:
-        std::print("{}|{} {:^{}} ", boldText, normalText, data, width);
+        std::print(print, "{}|{} {:^{}} ", boldText, normalText, data, width);
         break;
       }
     }
-    std::println("{}|{}", boldText, normalText);
+    std::println(print, "{}|{}", boldText, normalText);
   }
-  std::println("{}{:=^{}}{}\n", boldText, "", totalWidth, normalText);
+  std::println(print, "{}{:=^{}}{}\n", boldText, "", totalWidth, normalText);
 }
 }  // namespace utils
 
